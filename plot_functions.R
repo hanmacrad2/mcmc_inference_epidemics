@@ -137,7 +137,6 @@ PLOT_MCMC_GRID <- function(sim_data, mcmc_output,
                                              B_PRIOR_GAMMA = TRUE, C_PRIOR_GAMMA = TRUE,
                                              FLAG_SSI = FALSE, RJMCMC = FALSE)) { 
   #PLOT
-  #plot.new()
   par(mfrow=c(4,4))
   
   #DATA
