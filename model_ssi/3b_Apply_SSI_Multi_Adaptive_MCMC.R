@@ -1,18 +1,18 @@
 #****************************************************************
-#* 
-# APPLY ADAPTIVE SHAPING 
+#*
+# APPLY ADAPTIVE SHAPING
 #*
 #****************************************************************
 library(coda)
 library(MASS)
-setwd("~/GitHub/epidemic_modelling") 
-source("epidemic_functions.R") 
-source("plot_functions.R") 
-source("helper_functions.R") 
+setwd("~/GitHub/epidemic_modelling")
+source("epidemic_functions.R")
+source("plot_functions.R")
+source("helper_functions.R")
 
 
 #****************************************************************
-# DATA 
+# DATA
 #****************************************************************
 typeX = 'Canadian XD'; seed_count = 1;
 
@@ -37,7 +37,7 @@ sim_data_canadaX2 = list(canada_ns, canada_ss)
 #****************************************************************
 # MCMC INPUTS
 #****************************************************************
-n_mcmc = 500000 #100000 #0 #0 #500000 
+n_mcmc = 500000 #100000 #0 #0 #500000
 mod_start_points = list(m1 = 0.5, m2 = 0.02, m3 = 20)
 mcmc_inputs = list(n_mcmc = n_mcmc, mod_start_points = c(0.5, 0.02, 20), burn_in_pc = 0.05,
                    dim = 3, alpha_star = 0.4, v0 = 100, vec_min = c(0,0,1), thinning_factor = 10)
@@ -45,6 +45,14 @@ mcmc_inputs = list(n_mcmc = n_mcmc, mod_start_points = c(0.5, 0.02, 20), burn_in
 #****************************************************************
 # N0 1 START NO SS
 #****************************************************************
+
+#MOD START POINTS
+n_mcmc = 500000 #100000 #0 #0 #500000
+#SAME STARTING POINTS AS FINAL POINTS IN LAST MCMC RUN
+mod_start_points = list(m1 = 0.72, m2 = 0.0038, m3 = 22)
+mcmc_inputs = list(n_mcmc = n_mcmc, mod_start_points = c(0.5, 0.02, 20), burn_in_pc = 0.05,
+                   dim = 3, alpha_star = 0.4, v0 = 100, vec_min = c(0,0,1), thinning_factor = 10)
+
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
@@ -56,15 +64,15 @@ mcmc_multiX3$time_elap = time_elap
 mcmc_plot_inputs = list(n_mcmc = n_mcmc, mod_start_points = mod_start_points,
                         mod_par_names = c('a', 'b', 'c'),
                         sigma = sigma, model_typeX = typeX, TYPEX = '',
-                        seed_count = seed_count)
+                        seed_count = seed_count, thinning_factor = 10)
 
 df_results_M3 = PLOT_MCMC_SSI_GRID_REAL_DATA(sim_data_canadaX1, mcmc_multiX3,
-                                                      mcmc_plot_inputs = mcmc_plot_inputs,
-                                                      FLAGS_LIST = list(DATA_AUG = FALSE,
-                                                                        PRIOR = TRUE, B_PRIOR_GAMMA = TRUE, C_PRIOR_GAMMA = TRUE,
-                                                                        FLAG_SSI = TRUE, RJMCMC = FALSE,
-                                                                        BURN_IN = TRUE, FLAG_ADAPTIVE = FALSE,
-                                                                        MULTI_ALG = TRUE))
+                                             mcmc_plot_inputs = mcmc_plot_inputs,
+                                             FLAGS_LIST = list(DATA_AUG = FALSE,
+                                                               PRIOR = TRUE, B_PRIOR_GAMMA = TRUE, C_PRIOR_GAMMA = TRUE,
+                                                               FLAG_SSI = TRUE, RJMCMC = FALSE,
+                                                               BURN_IN = TRUE, FLAG_ADAPTIVE = FALSE,
+                                                               MULTI_ALG = TRUE, THIN = TRUE))
 #PLOTS ADDITIONAL
 PLOT_MCMC_MEANS(mcmc_multiX3,
                 mcmc_plot_inputs = mcmc_plot_inputs,
@@ -73,7 +81,7 @@ PLOT_MCMC_MEANS(mcmc_multiX3,
                                   FLAG_SSI = FALSE, RJMCMC = FALSE,
                                   BURN_IN = TRUE,
                                   FLAG_ADAPTIVE = FALSE, MULTI_ALG = TRUE))
- 
+
 # PLOT_SIGMA_ADADPTIVE(mcmc_ssi_adp_canadaX8, mcmc_inputs)
 
 #****************************************************************
@@ -116,7 +124,7 @@ PLOT_MCMC_MEANS(mcmc_multiX4,
 #PLOT_SIGMA_ADADPTIVE(mcmc_ssi_adp_canadaX8, mcmc_inputs)
 
 #****************************************************************
-# PART 2: COMPARE CHAINS - GELMAN RUBIN MCMC DIAGNOSTIC :D 
+# PART 2: COMPARE CHAINS - GELMAN RUBIN MCMC DIAGNOSTIC :D
 #****************************************************************
 #get_gelman_rubin(mcmc_ssi_adp_canadaX6, mcmc_ssi_adp_canadaX7)
 
