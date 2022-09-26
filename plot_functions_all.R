@@ -118,6 +118,20 @@ PLOT_SIGMA_ADADPTIVE <- function(mcmc_output, mcmc_inputs){
   
 }
 
+#PLOT ADAPTIVE SIGMA
+PLOT_SIGMA_ADADPTIVE <- function(mcmc_output, mcmc_specs){
+  
+  #Burn_in 
+  burn_in = mcmc_specs$burn_in_pc*mcmc_specs$n_mcmc
+  n_mcmc = mcmc_specs$n_mcmc
+  #Plot
+  par(mfrow = c(2, 2))
+  plot.ts(mcmc_output$sigma$sigma1, ylab = 'sigma a', main = paste0('sigma a, burn in = ', burn_in))
+  plot.ts(mcmc_output$sigma$sigma2, ylab = 'sigma b', main = paste0('sigma b, burn in = ', burn_in))
+  plot.ts(mcmc_output$sigma$sigma3, ylab = 'sigma c', main = paste0('sigma c, burn in = ', burn_in))
+  
+}
+
 #*******************************************
 #*
 #* GRID PLOT SUPER-SPREADING MODELS:
