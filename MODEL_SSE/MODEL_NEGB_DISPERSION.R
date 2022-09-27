@@ -24,7 +24,7 @@ SIMULATE_BRANCHING_NEGBIN = function(num_days = 110, alphaX = 1.2, shape_gamma =
     
     #FOR EACH PREVIOUS DATY 
     tot_infectiousness = 0
-    
+   
     for (tt in 1:t){
       
       #PARAMS
