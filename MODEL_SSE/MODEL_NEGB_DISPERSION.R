@@ -7,31 +7,31 @@ library(simstudy)
 #I. BASELINE SIMULATION
 SIMULATE_BRANCHING_NEGBIN = function(num_days = 110, alphaX = 1.2, shape_gamma = 6, scale_gamma = 1, k = 0.16) {
   
-  'Negative binomial simulation model'
+  'Simulate from the Negative Binomial model'
   
-  #Initialise params
-  x = vector('numeric', num_days)
-  x[1] = 2
+  #INTIALISE VECTORS
+  x = vector('numeric', num_days); x[1] = 2
   
-  #Infectiousness (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
-  #Explanation: Gamma is a continuous function so integrate over the density at that point in time (today - previous day)
+  #INFECTIOUSNESS (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
   prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
   
-  #Days of Infection Spreading
+  #DAYS OF THE EPIDEMIC
   for (t in 2:num_days) {
     
     #Total rate
     #lambda_t = sum(x[1:(t-1)]*rev(prob_infect[1:(t-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
     #r0 = alphaX*lambda_t
     
-    #For Each Previous day 
+    #FOR EACH PREVIOUS DATY 
     tot_infectiousness = 0
+    
     for (tt in 1:t){
       
-      #Params
+      #PARAMS
       lambda_t = sum(x[1:(tt-1)]*rev(prob_infect[1:(tt-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
       r0 = alphaX*lambda_t
-      #Get gamma params, shape and scale from mean 
+      
+      #GET GAMMA PARAMS, SHAPE & SCALE FROM THE MEAN
       gamma_params <- gammaGetShapeRate(r0, k)
       c(gamma_params$shape, gamma_params$rate)
       
