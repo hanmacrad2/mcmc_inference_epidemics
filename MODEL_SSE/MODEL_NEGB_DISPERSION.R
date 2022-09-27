@@ -7,8 +7,9 @@ library(simstudy)
 #I. BASELINE SIMULATION
 SIMULATE_BRANCHING_NEGBIN = function(num_days = 110, alphaX = 1.2, shape_gamma = 6, scale_gamma = 1, k = 0.16) {
   
-  'Baseline simulation model'
-  #Set up
+  'Negative binomial simulation model'
+  
+  #Initialise params
   x = vector('numeric', num_days)
   x[1] = 2
   
@@ -23,21 +24,20 @@ SIMULATE_BRANCHING_NEGBIN = function(num_days = 110, alphaX = 1.2, shape_gamma =
     #lambda_t = sum(x[1:(t-1)]*rev(prob_infect[1:(t-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
     #r0 = alphaX*lambda_t
     
-    #For each previous day
-    tot_infect = 0
+    #For Each Previous day 
+    tot_infectiousness = 0
     for (tt in 1:t){
       
-      #Gamma #IS THIS RIGHT AT ALL?;
+      #Params
       lambda_t = sum(x[1:(tt-1)]*rev(prob_infect[1:(tt-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
       r0 = alphaX*lambda_t
-      
+      #Get gamma params, shape and scale from mean 
       gamma_params <- gammaGetShapeRate(r0, k)
-      c(rs$shape, rs$rate)
+      c(gamma_params$shape, gamma_params$rate)
       
       #INDIVIDUAL R0, I.E NU
       vec_nu <- rgamma(x[tt], shape = gamma_params$shape, rate = gamma_params$rate)
-      
-      tot_infect = tot_infect + sum(vec_nu)
+      tot_infectiousness = tot_infectiousness + sum(vec_nu)
       
     }
     
