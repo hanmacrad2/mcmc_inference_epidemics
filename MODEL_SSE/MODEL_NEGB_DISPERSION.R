@@ -1,5 +1,6 @@
 #SIMULATE FROM v ~ Gamma(R0, k), Z ~ NegBin(R0, k)
 
+#PACKAGES
 library(simstudy)
 
 #*********************************************************
@@ -19,29 +20,30 @@ SIMULATE_BRANCHING_NEGBIN = function(num_days = 110, alphaX = 1.2, shape_gamma =
   for (t in 2:num_days) {
     
     #Total rate
-    lambda_t = sum(x[1:(t-1)]*rev(prob_infect[1:(t-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
-    r0 = alphaX*lambda_t
+    #lambda_t = sum(x[1:(t-1)]*rev(prob_infect[1:(t-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
+    #r0 = alphaX*lambda_t
     
     #For each previous day
     tot_infect = 0
-    for (tt in 2: x[t-1]){
+    for (tt in 1:t){
       
       #Gamma #IS THIS RIGHT AT ALL?;
       lambda_t = sum(x[1:(tt-1)]*rev(prob_infect[1:(tt-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
       r0 = alphaX*lambda_t
       
-      rs <- gammaGetShapeRate(r0, k)
+      gamma_params <- gammaGetShapeRate(r0, k)
       c(rs$shape, rs$rate)
-      vec_nu <- rgamma(x[tt], shape = rs$shape, rate = rs$rate)
-      #vec_nu = rgamma(x[i], r0, k) #vetor of individual r0
-      tot_infectiousness = tot_infect + sum(vec_nu)
+      
+      #INDIVIDUAL R0, I.E NU
+      vec_nu <- rgamma(x[tt], shape = gamma_params$shape, rate = gamma_params$rate)
+      
+      tot_infect = tot_infect + sum(vec_nu)
       
     }
     
     x[t] = rnbinom(1, mu = tot_infectiousness, size = k) 
     
-    #vec_nu = vector('numeric', length(x[t]))
-    #vec_nu = gamma(r0, k) #individal v
+    #IDEA
     #tot_rate = (vec_nu1 + vecnu_2 + vecnu_3 + vecnu4)*rev(prob_infect[1:(t-1)])
     }
   
