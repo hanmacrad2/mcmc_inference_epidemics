@@ -14,7 +14,7 @@ library(simstudy)
 #I. SIMULATE SSE NEGBIN
 #*********************************************************
 
-SIMULATE_BRANCHING_NEGBIN_SSE = function(num_days = 110, shape_gamma = 6, scale_gamma = 1,
+SIMULATE_NEGBIN_SSE = function(num_days = 110, shape_gamma = 6, scale_gamma = 1,
                                          alphaX = 1.2, k = 0.16) {
   
   'Simulate from the Negative Binomial model'
@@ -40,14 +40,14 @@ SIMULATE_BRANCHING_NEGBIN_SSE = function(num_days = 110, shape_gamma = 6, scale_
 }
 
 #Apply
-y = SIMULATE_BRANCHING_NEGBIN_SSE()
+y = SIMULATE_NEGBIN_SSE()
 plot.ts(y)
 
 #*********************************************************
 #II. SIMULATE SSI NEGBIN
 #*********************************************************
 
-SIMULATE_BRANCHING_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
+SIMULATE_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
                                          shape_gamma = 6, scale_gamma = 1, k = 0.16) {
   
   'Simulate from the Negative Binomial model'
@@ -91,14 +91,16 @@ SIMULATE_BRANCHING_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
 }
 
 #APPLY
-y3 = SIMULATE_BRANCHING_NEGBIN_SSI()
+y3 = SIMULATE_NEGBIN_SSI()
 plot.ts(y3)
 
 #*********************************************************
 #APPLY TO A RANGE OF PARAMS
 #*********************************************************
 
-PLOT_RANGE_NB_VALS <- function(seedX = 2, range_rate = c(1.0, 1.2, 1.6, 2.0), range_k = c(0.1, 0.5, 1, 4)){
+PLOT_RANGE_NB_VALS <- function(seedX = 2, FLAG_SSE = FALSE,
+                               range_rate = c(1.0, 1.2, 1.6, 2.0),
+                               range_k = c(0.1, 0.5, 1, 4)){
   
   #Plot
   set.seed(seedX); print(paste0('seed = ', seedX))
@@ -111,7 +113,11 @@ PLOT_RANGE_NB_VALS <- function(seedX = 2, range_rate = c(1.0, 1.2, 1.6, 2.0), ra
     for (alphaXX in range_rate) {
       
       #Simulate for a given alpha, k
-      y = SIMULATE_BRANCHING_NEGBIN_SSE(alphaX = alphaXX, k = kX) 
+      if (FLAG_SSE){
+        y = SIMULATE_NEGBIN_SSE(alphaX = alphaXX, k = kX)  
+      } else {
+        y = SIMULATE_NEGBIN_SSI(alphaX = alphaXX, k = kX)  
+      }
       
       if (count == 0){
         titleX = bquote("Negbin(" ~ alpha ~ "*" ~ lambda[t] ~ ", k)," ~ alpha ~ "=" ~ .(alphaXX)
