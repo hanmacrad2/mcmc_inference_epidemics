@@ -73,19 +73,6 @@ SIMULATE_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
     total_rate = sum(vec_nu_t*infectivity)
     x[t] = rpois(1, total_rate)
     
-    # vec_nu_t = sum(rgamma(length(x[t-1]), alphaX, k) )
-    # lambda_t = sum(x[1:(t-1)]*rev(prob_infect[1:(t-1)])) #Product of infecteds & their probablilty of infection along the gamma dist at that point in time
-    # r0 = alphaX*lambda_t
-    # 
-    # #GET GAMMA PARAMS, SHAPE & SCALE FROM THE MEAN
-    # gamma_params <- gammaGetShapeRate(r0, k)
-    # c(gamma_params$shape, gamma_params$rate)
-    # 
-    # #INDIVIDUAL R0, I.E NU
-    # vec_nu[t] <- sum(rgamma(x[tt], shape = gamma_params$shape, rate = gamma_params$rate))
-    # nu_t = sum(rgamma(x[tt], shape = gamma_params$shape, rate = gamma_params$rate))
-    # x[t] = rpois(1, mu = nu_t*lambda_t, size = k) #Poisson 
-    
   }
   return(x)
 }
@@ -98,7 +85,7 @@ plot.ts(y3)
 #APPLY TO A RANGE OF PARAMS
 #*********************************************************
 
-PLOT_RANGE_NB_VALS <- function(seedX = 2, FLAG_SSE = FALSE,
+PLOT_RANGE_NB_VALS <- function(seedX = 1, FLAG_SSE = FALSE,
                                range_rate = c(1.0, 1.2, 1.6, 2.0),
                                range_k = c(0.1, 0.5, 1, 4)){
   
