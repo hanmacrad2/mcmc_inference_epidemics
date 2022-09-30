@@ -64,13 +64,12 @@ SIMULATE_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
   for (t in 2:num_days) {
     
     #NU: INDIVIDUAL R0; GAMMA(ALPHA, K)
-    gamma_params <- gammaGetShapeRate(alphaX, k)
-    c(gamma_params$shape, gamma_params$rate)
-    vec_nu_t[t] <- sum(rgamma(length(x[t-1]), shape = gamma_params$shape, rate = gamma_params$rate))
+    vec_nu_t[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k)
     
     #OFFSPRING; POISSON()
-    infectivity = x[1:(t-1)]*rev(prob_infect[1:(t-1)])
+    infectivity = rev(prob_infect[1:(t-1)]) #x[1:(t-1)]*rev(prob_infect[1:(t-1)])
     total_rate = sum(vec_nu_t*infectivity)
+    print(total_rate)
     x[t] = rpois(1, total_rate)
     
   }
@@ -86,7 +85,7 @@ plot.ts(y3)
 #*********************************************************
 
 PLOT_RANGE_NB_VALS <- function(seedX = 1, FLAG_SSE = FALSE,
-                               range_rate = c(1.0, 1.2, 1.6, 2.0),
+                               range_rate = c(1.35, 1.35, 1.35, 1.35),
                                range_k = c(0.1, 0.5, 1, 4)){
   
   #Plot
@@ -125,5 +124,43 @@ PLOT_RANGE_NB_VALS <- function(seedX = 1, FLAG_SSE = FALSE,
 #APPLY
 PLOT_RANGE_NB_VALS()
 
+#PLOT
+v1= rnbinom(10000, mu=2.4,size=0.16);
+v2= rnbinom(10000,mu=1.2,size=0.16) + rnbinom(10000,mu=1.2,size=0.16);
 
+c(var(v1),var(v2))
 
+#
+SIMULATE_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
+                               shape_gamma = 6, scale_gamma = 1, k = 0.16) {
+  
+  'Simulate from the Negative Binomial model'
+  
+  #INTIALISE VECTORS
+  x = vector('numeric', num_days); x[1] = 2
+  
+  #INFECTIOUSNESS (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
+  prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
+  
+  vec_nu_t = vector('numeric', num_days); 
+  
+  #DAYS OF THE EPIDEMIC
+  for (t in 2:num_days) {
+    
+    #NU: INDIVIDUAL R0; GAMMA(ALPHA, K)
+    #gamma_params = c(shape = k, scale = alphaX/k)
+    vec_nu_t[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k)
+    #gamma_params <- gammaGetShapeRate(alphaX, k) 
+    #c(gamma_params$shape, gamma_params$rate)
+    #vec_nu_t[t-1] <- sum(rgamma(x[t-1], shape = gamma_params$shape, rate = gamma_params$rate))
+    #vec_nu_t[t-1] <- rgamma(1, shape = x[t-1]*gamma_params$shape, rate = gamma_params$rate)
+    
+    #OFFSPRING; POISSON()
+    infectivity = rev(prob_infect[1:(t-1)]) #x[1:(t-1)]*rev(prob_infect[1:(t-1)])
+    total_rate = sum(vec_nu_t*infectivity)
+    print(total_rate)
+    x[t] = rpois(1, total_rate)
+    
+  }
+  return(x)
+}
