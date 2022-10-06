@@ -52,6 +52,7 @@ simulate_branching_ss = function(num_days = 110, shape_gamma = 6, scale_gamma = 
   magnitude_ss = increased rate of superspreading event'
   
   #Set up
+  #print(paste0('alphaX = ', alphaX))
   total_infecteds = vector('numeric', num_days)
   nsse_infecteds = vector('numeric', num_days)
   sse_infecteds = vector('numeric', num_days)
