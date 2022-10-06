@@ -69,7 +69,6 @@ LOG_LIKELIHOOD_NU <- function(x, alphaX, k){
 #*******************************************************************************
 # #DATA AUGMENTATION      (W/ DATA AUGMENTATION)
 #************************************************************************
-
 MODEL_NU_MCMC <- function(data,
                               mcmc_inputs = list(n_mcmc = 500000,
                                                  mod_start_points = list(m1 = 0.72, m2 = 0.0038), alpha_star = 0.4,
@@ -234,3 +233,7 @@ return(list(alpha_vec = alpha_vec, k_vec = k_vec,
             log_like_vec = log_like_vec, sigma = sigma,
             list_accept_rates = list_accept_rates))
 }
+
+#PARAMS CORRECT?
+n = 10000
+zz = rgamma(n, shape = x[t-1]*k, scale = alphaX/k)
