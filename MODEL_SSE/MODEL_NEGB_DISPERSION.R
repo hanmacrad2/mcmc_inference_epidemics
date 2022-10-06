@@ -69,7 +69,7 @@ SIMULATE_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
     #OFFSPRING; POISSON()
     infectivity = rev(prob_infect[1:(t-1)]) #x[1:(t-1)]*rev(prob_infect[1:(t-1)])
     total_rate = sum(vec_nu_t*infectivity)
-    print(total_rate)
+    #print(total_rate)
     x[t] = rpois(1, total_rate)
     
   }
@@ -81,10 +81,63 @@ y3 = SIMULATE_NEGBIN_SSI()
 plot.ts(y3)
 
 #*********************************************************
+#SAMPLING DISTRIBUTION
+#*********************************************************
+
+PLOT_SAMP_DIST_NEG_BIN <- function(seedX = 1, FLAG_SSI = TRUE,
+                                   FREQ_SETTING = FALSE,
+                                   num_days = 110,
+                                   num_samps = 100000, alphaXX = 1.35,
+                               range_k = c(0.1, 0.5, 1, 4)){
+  
+  #Plot
+  set.seed(seedX); print(paste0('seed = ', seedX))
+  plot.new(); par(mfrow = c(2, 2))
+  count = 0;
+  
+  #Outer loop: dispersion
+  for (kX in range_k) {
+  vec_infections = vector("numeric", length = num_samps)
+  
+  for (i in 1:num_samps){
+      
+      #Simulate for a given alpha, k
+      if (FLAG_SSI){
+        y = SIMULATE_NEGBIN_SSI(alphaX = alphaXX, k = kX)  
+      } else {
+        y = SIMULATE_NEGBIN_SSE(alphaX = alphaXX, k = kX)  
+      }
+      
+    #ADD
+    #print(paste0('sum y = ', sum(y)))
+    vec_infections[i] = sum(y)
+  }
+    #PLOT
+   print(paste0('kX  = ', sum(kX)))
+    if (count == 0){
+      titleX = bquote("Sum of xt, T = " ~ .(num_days) ~ "xt ~ Poisson(" ~ nu ~ "*" ~ lambda[t] ~ ")," ~ alpha ~ .(alphaXX) ~       # ~ nu ~ "~ Ga(" ~ .(alphaXX)
+                      ~ ", k = " ~ .(kX))
+    } else {
+      titleX = bquote(alpha ~ "=" ~ .(alphaXX)
+                      ~ ", k = " ~ .(kX))
+    }
+    #Plot
+    hist(vec_infections, main = titleX, freq = FREQ_SETTING, xlab = 'sum of infections', #ylab = 'Daily infection count', 
+            cex.lab=1.5, cex.axis=1.5, cex.main= 2.0, cex.sub=1.5)
+    #count = count + 1
+  }
+  
+}
+
+#APPLY
+PLOT_SAMP_DIST_NEG_BIN()
+
+
+#*********************************************************
 #APPLY TO A RANGE OF PARAMS
 #*********************************************************
 
-PLOT_RANGE_NB_VALS <- function(seedX = 1, FLAG_SSE = FALSE,
+PLOT_RANGE_NB_VALS <- function(seedX = 1, FLAG_SSI = TRUE,
                                range_rate = c(1.35, 1.35, 1.35, 1.35),
                                range_k = c(0.1, 0.5, 1, 4)){
   
@@ -100,9 +153,9 @@ PLOT_RANGE_NB_VALS <- function(seedX = 1, FLAG_SSE = FALSE,
       
       #Simulate for a given alpha, k
       if (FLAG_SSE){
-        y = SIMULATE_NEGBIN_SSE(alphaX = alphaXX, k = kX)  
-      } else {
         y = SIMULATE_NEGBIN_SSI(alphaX = alphaXX, k = kX)  
+      } else {
+        y = SIMULATE_NEGBIN_SSE(alphaX = alphaXX, k = kX)  
       }
       
       if (count == 0){
@@ -124,13 +177,8 @@ PLOT_RANGE_NB_VALS <- function(seedX = 1, FLAG_SSE = FALSE,
 #APPLY
 PLOT_RANGE_NB_VALS()
 
-#PLOT
-v1= rnbinom(10000, mu=2.4,size=0.16);
-v2= rnbinom(10000,mu=1.2,size=0.16) + rnbinom(10000,mu=1.2,size=0.16);
 
-c(var(v1),var(v2))
-
-#
+#OLD!
 SIMULATE_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
                                shape_gamma = 6, scale_gamma = 1, k = 0.16) {
   
@@ -164,3 +212,10 @@ SIMULATE_NEGBIN_SSI = function(num_days = 110, alphaX = 1.2,
   }
   return(x)
 }
+
+#NEGATIVE BINOMIAL
+#PLOT
+v1= rnbinom(10000, mu=2.4,size=0.16);
+v2= rnbinom(10000,mu=1.2,size=0.16) + rnbinom(10000,mu=1.2,size=0.16);
+
+c(var(v1),var(v2))
