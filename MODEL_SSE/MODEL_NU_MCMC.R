@@ -13,17 +13,17 @@ SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
   #INFECTIOUSNESS (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
   prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
   
-  vec_nu_t = vector('numeric', num_days); 
+  vec_sum_nu_t = vector('numeric', num_days); 
   
   #DAYS OF THE EPIDEMIC
   for (t in 2:num_days) {
     
     #NU: INDIVIDUAL R0; GAMMA(ALPHA, K)
-    vec_nu_t[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k)
+    vec_sum_nu_t[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k)
     
     #OFFSPRING; POISSON()
     infectivity = rev(prob_infect[1:(t-1)]) #x[1:(t-1)]*rev(prob_infect[1:(t-1)])
-    total_rate = sum(vec_nu_t*infectivity)
+    total_rate = sum(vec_sum_nu_t*infectivity)
     #print(total_rate)
     x[t] = rpois(1, total_rate)
     
@@ -36,7 +36,7 @@ SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
 
 #*******************************************************************************
 #LOG LIKELIHOOD
-LOG_LIKELIHOOD_NU <- function(x, alphaX, k){
+LOG_LIKELIHOOD_NU <- function(x, alphaX, k, eta){ #eta - a vector of length x. eta[1] = infectivity of x[1]
   
   #Params
   num_days = length(x)
@@ -50,14 +50,14 @@ LOG_LIKELIHOOD_NU <- function(x, alphaX, k){
   for (t in 2:num_days) {
     
     #NU: INDIVIDUAL R0; GAMMA(ALPHA, K)
-    vec_nu_t[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k)
+    #vec_nu_t[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k)
     
     #OFFSPRING; POISSON()
     infectivity = rev(prob_infect[1:(t-1)]) #x[1:(t-1)]*rev(prob_infect[1:(t-1)])
-    total_rate = sum(vec_nu_t*infectivity)
-
-    x[t] = rpois(1, total_rate)
+    total_rate = sum(eta[1:(t-1)]*infectivity)
     
+    #dgamma 
+    loglike = loglike + dgamma(eta[t-1], shape = x[t-1]*k, scale = alphaX/k, log = TRUE)
     loglike = loglike + x[t]*log(total_rate) - total_rate - lfactorial(x[t]) #Need to include normalizing constant 
     
   }
@@ -65,6 +65,8 @@ LOG_LIKELIHOOD_NU <- function(x, alphaX, k){
   return(loglike)
   
 }
+
+LOG_LIKELIHOOD_NU(c(1,2), alphaX = 1.2, k = 100000, eta = c(1,2))
 
 #*******************************************************************************
 # #DATA AUGMENTATION      (W/ DATA AUGMENTATION)
@@ -105,6 +107,7 @@ MODEL_NU_MCMC <- function(data,
   
   #INITIALISE RUNNING PARAMS
   alpha = a_vec[1];  k = b_vec[1]; log_like = log_like_vec[1]
+  eta = x
   
   #SIGMA
   sigma1 =  0.4*mcmc_inputs$mod_start_points$m1;  sigma2 = 0.4*mcmc_inputs$mod_start_points$m2
@@ -141,52 +144,27 @@ MODEL_NU_MCMC <- function(data,
   #******************************
   for(i in 2:n_mcmc) {
     
+    #alpha (metropolis + k; jointly) multivariate normal for proposal
+    #START PRETEND KNOW ALPHA + K 
+    
     #****************************************************** 
     #MCMC PARAMS
     
     #FOR EACH S_T
     for(t in 1:time){
       
-      #Copy of data 
-      #data_dash = data
-      
-      #STOCHASTIC PROPOSAL for s
-      if (runif(1) < 0.5) {
-        param_dash = param + 1
-      } else {
-        st_dash = param - 1
-      }
-      
-      #CHECK
-      if (param_dash < 0) {
-        param_dash = 0
-      }
-      
-      #ACCEPTANCE PROBABILITY
-      # data_dash[[2]][t] = st_dash #s_t = st_dash
-      # data_dash[[1]][t] =  data[[1]][t] + data[[2]][t] - st_dash #n_t = x_t - s_t
-      # 
-      # if (data_dash[[1]][t] < 0){
-      #   data_dash[[1]][t] = 0
-      # }
-      # 
-      # #CRITERIA FOR S_T & N_T
-      # if((data_dash[[2]][t] < 0) || (data_dash[[1]][t] < 0)){
-      #   #Store
-      #   non_ss[i/thinning_factor, t] = data[[1]][t]
-      #   ss[i/thinning_factor, t] = data[[2]][t]
-      #   next
-      # }
-      
+      v = rep(0, length(eta)); v[t] = 1
+      eta_dash = abs(eta + rnorm(1,0,1)*v) #normalise the t_th element of eta #or variance = x[t]
+     
       #LOG LIKELIHOOD
-      logl_new = LOG_LIKELIHOOD_NU(data_dash, alpha, k)
+      logl_new = LOG_LIKELIHOOD_NU(data_dash, alpha, k, eta_dash)
       log_accept_ratio = logl_new - log_like
       
       #METROPOLIS ACCEPTANCE STEP
       if(!(is.na(log_accept_ratio)) && log(runif(1)) < log_accept_ratio) {
         
         #ACCEPT
-        data <- data_dash
+        eta <- eta_dash
         log_like <- logl_new
         #mat_count_da[i, t] = mat_count_da[i, t] + 1
         list_accept_counts$count_accept1 = list_accept_counts$count_accept1 + 1
