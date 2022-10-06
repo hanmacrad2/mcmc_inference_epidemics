@@ -80,13 +80,6 @@ MODEL_NU_MCMC <- function(data,
   w/ acceptance rates.
   INCLUDES; ADAPTATION, DATA AUGMENTATION'
   
-  'Priors
-  p(a) = exp(rate) = rate*exp(-rate*x). log(r*exp(-r*x)) = log(r) - rx
-      -> E.g exp(1) = 1*exp(-1*a) = exp(-a). log(exp(-a)) = - a
-  p(b) = exp(1) or p(b) = g(shape, scale), for e.g g(3, 2)
-  p(c) = exp(1) + 1 = 1 + exp(-c) = exp(c - 1)'
-  
-  
   #**********************************************
   #INITIALISE PARAMS
   #**********************************************
