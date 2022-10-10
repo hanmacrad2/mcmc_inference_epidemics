@@ -1,7 +1,8 @@
 #MODEL INDIVIDUAL NU
-
+library(MASS)
 #****************************
 #SIMULATION
+#*****************************
 SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
                        shape_gamma = 6, scale_gamma = 1) {
   
@@ -35,7 +36,6 @@ SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
 #**********************************************
 #LOG LIKELIHOOD
 #**********************************************
-
 LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. eta[1] = infectivity of xt[1]
   
   #Params
@@ -52,7 +52,8 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
     
     #OFFSPRING; POISSON()
     infectivity = rev(prob_infect[1:(t-1)]) 
-    total_rate = sum(eta[1:(t-1)]*infectivity)
+    total_rate = sum(eta[1:(t-1)]*infectivity) #SHOULD ETA BE LENGTH NUM_DAYS --> WORK OUT
+    print(paste0('total rate = ', total_rate))
     
     #dgamma #EXPLAIN DGAMMA??
     loglike = loglike + dgamma(eta[t-1], shape = x[t-1]*k, scale = alpha/k, log = TRUE)
@@ -67,22 +68,22 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
 #********************************************************
 #1. INDIVIDUAL R0 MCMC ADAPTIVE SHAPING                           
 #********************************************************
-MCMC_MODEL_NU <- function(data,
+#NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
+MCMC_MODEL_NU <- function(dataX,
                           mcmc_inputs = list(n_mcmc = 1000,
-                                             mod_start_points = list(m1 = 1.2, m2 = 0.16), alpha_star = 0.4,
+                                             mod_start_points = c(1.2, 0.16), alpha_star = 0.4,
                                              dim = 2, alpha_star = 0.4, v0 = 100, vec_min = c(0,0),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                              thinning_factor = 10),
                           FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = FALSE)) {    
   
   #NOTE:
   #i - 1 = n (Simon's paper)
-  
   #**********************************************
   #INITIALISE PARAMS
   #**********************************************
   
   #MCMC PARAMS + VECTORS
-  time = length(data[[1]]); n_mcmc = mcmc_inputs$n_mcmc;
+  time = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
   dim = mcmc_inputs$dim; count_accept = 0; count_accept_da = 0
   
   #THINNING FACTOR
@@ -94,12 +95,13 @@ MCMC_MODEL_NU <- function(data,
   }
   
   #MODEL PARAMS
-  eta = data
+  eta = dataX
   nu_params_matrix = matrix(NA, mcmc_vec_size, dim);   #Changed from 0 to NA (As should be overwriting all cases)
   nu_params_matrix[1,] <- mcmc_inputs$mod_start_points;
   nu_params = nu_params_matrix[1,] #2x1 #as.matrix
-  log_like_vec <- vector('numeric', mcmc_vec_size);
-  log_like_vec[1] <- LOG_LIKELIHOOD_NU(data, nu_params, eta);  log_like = log_like_vec[1]
+  eta_mean_vec <- vector('numeric', mcmc_vec_size)
+  log_like_vec <- vector('numeric', mcmc_vec_size)
+  log_like_vec[1] <- LOG_LIKELIHOOD_NU(dataX, nu_params, eta);  log_like = log_like_vec[1]
   
   #ADAPTIVE SHAPING PARAMS + VECTORS
   lambda_vec <- vector('numeric', mcmc_vec_size); lambda_vec[1] <- 1
@@ -115,8 +117,8 @@ MCMC_MODEL_NU <- function(data,
     
     #SIGMA ITERATION NO.1
     if (i == 2){
-      x_bar = 0.5*(x + nu_params_matrix[1,])
-      sigma_i = (1/(termX + 3))*(tcrossprod(nu_params_matrix[1,]) + tcrossprod(x) -
+      x_bar = 0.5*(nu_params + nu_params_matrix[1,])
+      sigma_i = (1/(termX + 3))*(tcrossprod(nu_params_matrix[1,]) + tcrossprod(nu_params) -
                                    2*tcrossprod(x_bar) + (termX + 1)*sigma_i) #CHANGE TO USE FUNCTIONS
     }
     
@@ -137,7 +139,7 @@ MCMC_MODEL_NU <- function(data,
     }
     
     #LOG LIKE
-    logl_new = LOG_LIKELIHOOD_NU(data, nu_params_dash, eta)
+    logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
     
     #ACCEPTANCE RATIO
     log_accept_ratio = logl_new - log_like #PRIORS?
@@ -164,7 +166,7 @@ MCMC_MODEL_NU <- function(data,
     lambda_i =  lambda_i*exp(delta/i*(accept_prob - mcmc_inputs$alpha_star))
     
     #************************************
-    #DATA AUGMENTATION
+    #dataX AUGMENTATION
     #************************************
     for(t in 1:time){
       
@@ -173,7 +175,7 @@ MCMC_MODEL_NU <- function(data,
       eta_dash = abs(eta + rnorm(1,0,1)*v) #normalise the t_th element of eta #or variance = x[t]
       
       #LOG LIKELIHOOD
-      logl_new = LOG_LIKELIHOOD_NU(data, nu_params_dash, eta)
+      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
       log_accept_ratio = logl_new - log_like
       
       #METROPOLIS ACCEPTANCE STEP
@@ -191,6 +193,7 @@ MCMC_MODEL_NU <- function(data,
       nu_params_matrix[i/thinning_factor,] = nu_params
       log_like_vec[i/thinning_factor] <- log_like
       lambda_vec[i/thinning_factor] <- lambda_i #Taking role of sigma, overall scaling constant. Sigma becomes estimate of the covariance matrix of the posterior
+      eta_mean_vec[i/thinning_factor] <- mean(eta)
     }
     
   } #END FOR LOOP
@@ -200,12 +203,10 @@ MCMC_MODEL_NU <- function(data,
   accept_rate_da = 100*count_accept_da/((n_mcmc-1)*time)
 
   #Return a, acceptance rate
-  return(list(nu_params_matrix = nu_params_matrix, log_like_vec = log_like_vec, lambda_vec = lambda_vec,
+  return(list(nu_params_matrix = nu_params_matrix,eta_mean_vec = eta_mean_vec,
+              log_like_vec = log_like_vec, lambda_vec = lambda_vec,
               accept_rate = accept_rate, accept_rate_da = accept_rate_da))
 } 
 
-#Apply
-#mcmc_nu = MCMC_MODEL_NU(sim_data_canadaX1)
-
-#NOTE
-#NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
+#APPLY
+mcmc_nu = MCMC_MODEL_NU(canadaX)
