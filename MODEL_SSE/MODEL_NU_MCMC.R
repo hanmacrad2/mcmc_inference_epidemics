@@ -53,10 +53,10 @@ LOG_LIKELIHOOD_NU <- function(x, alphaX, k, eta){ #eta - a vector of length x. e
     #vec_nu_t[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k)
     
     #OFFSPRING; POISSON()
-    infectivity = rev(prob_infect[1:(t-1)]) #x[1:(t-1)]*rev(prob_infect[1:(t-1)])
+    infectivity = rev(prob_infect[1:(t-1)]) 
     total_rate = sum(eta[1:(t-1)]*infectivity)
     
-    #dgamma 
+    #dgamma #EXPLAIN DGAMMA??
     loglike = loglike + dgamma(eta[t-1], shape = x[t-1]*k, scale = alphaX/k, log = TRUE)
     loglike = loglike + x[t]*log(total_rate) - total_rate - lfactorial(x[t]) #Need to include normalizing constant 
     
@@ -72,7 +72,7 @@ LOG_LIKELIHOOD_NU(c(1,2), alphaX = 1.2, k = 100000, eta = c(1,2))
 # #DATA AUGMENTATION      (W/ DATA AUGMENTATION)
 #************************************************************************
 MODEL_NU_MCMC <- function(data,
-                              mcmc_inputs = list(n_mcmc = 500000,
+                              mcmc_inputs = list(n_mcmc = 1000,
                                                  mod_start_points = list(m1 = 0.72, m2 = 0.0038), alpha_star = 0.4,
                                                  thinning_factor = 10),
                               priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
@@ -107,7 +107,7 @@ MODEL_NU_MCMC <- function(data,
   
   #INITIALISE RUNNING PARAMS
   alpha = a_vec[1];  k = b_vec[1]; log_like = log_like_vec[1]
-  eta = x
+  eta = x #Initialise as data 
   
   #SIGMA
   sigma1 =  0.4*mcmc_inputs$mod_start_points$m1;  sigma2 = 0.4*mcmc_inputs$mod_start_points$m2
@@ -134,11 +134,6 @@ MODEL_NU_MCMC <- function(data,
   #INITIALISE: ACCEPTANCE COUNTS
   list_accept_counts = list(count_accept1 = 0, count_accept2 = 0)
   
-  #DATA AUG OUTPUT
-  #mat_count_da = matrix(0, mcmc_vec_size, time) #i x t
-  #non_ss = matrix(0, mcmc_vec_size, time) #USE THINNING FACTOR
-  #ss = matrix(0, mcmc_vec_size, time) #USE THINNING FACTOR
-  
   #******************************
   #MCMC CHAIN
   #******************************
@@ -154,6 +149,7 @@ MODEL_NU_MCMC <- function(data,
     for(t in 1:time){
       
       v = rep(0, length(eta)); v[t] = 1
+      #Metropolis 
       eta_dash = abs(eta + rnorm(1,0,1)*v) #normalise the t_th element of eta #or variance = x[t]
      
       #LOG LIKELIHOOD
