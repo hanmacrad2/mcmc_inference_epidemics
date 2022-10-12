@@ -231,15 +231,28 @@ OUTER_FOLDER = "~/PhD_Warwick/Project_Epidemic_Modelling/Results/model_individua
 ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
 saveRDS(mcmc_nu, file = paste0(OUTER_FOLDER, 'mcmc_nu_', iter, '.rds' ))
 
+#RESULTS
 #OUTPUT
+burn_in = 100
 alpha_mcmc = mcmc_nu$nu_params_matrix[,1]
 plot.ts(alpha_mcmc)
+#BURN-IN
+alpha_mcmcB = alpha_mcmc[burn_in:length(alpha_mcmc)]
+plot.ts(alpha_mcmcB)
 
+#k
 k_mcmc = mcmc_nu$nu_params_matrix[,2]
 plot.ts(k_mcmc)
+#BURN-IN
+k_mcmcB = k_mcmc[burn_in:length(k_mcmc)]
+plot.ts(k_mcmcB)
 
-eta_mean_vec =  mcmc_nu$eta_mean_vec
-plot.ts(eta_mean_vec)
+#ETA
+eta_matrix = mcmc_nu$eta_matrix
 
+#LOGLIKE
 log_like_vec =  mcmc_nu$log_like_vec
 plot.ts(log_like_vec)
+
+#PLOT
+PLOT_NU_MCMC_GRID(canadaX, mcmc_nu)
