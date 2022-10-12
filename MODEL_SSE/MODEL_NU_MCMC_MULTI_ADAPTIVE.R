@@ -75,9 +75,9 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
 #1. INDIVIDUAL R0 MCMC ADAPTIVE SHAPING                           
 #********************************************************
 #NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
-MCMC_MODEL_NU <- function(dataX,
+MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
                           mcmc_inputs = list(n_mcmc = 100000,
-                                             mod_start_points = c(1.2, 0.16), alpha_star = 0.4,
+                                             mod_start_points = c(1.2, 0.16),
                                              dim = 2, alpha_star = 0.4, v0 = 100, vec_min = c(0,0),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                              thinning_factor = 10),
                           FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
@@ -222,8 +222,125 @@ MCMC_MODEL_NU <- function(dataX,
               accept_rate = accept_rate, accept_rate_da = accept_rate_da))
 } 
 
-#APPLY
-mcmc_nu = MCMC_MODEL_NU(canadaX)
+#********************************************************
+#1. INDIVIDUAL R0 MCMC                            
+#********************************************************
+MCMC_MODEL_NU <- function(dataX,
+                          mcmc_inputs = list(n_mcmc = 100000,
+                                             mod_start_points = c(1.2, 0.16),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
+                                             thinning_factor = 10, vec_min = c(0,0)),
+                          FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = FALSE)) {    
+  
+  #NOTE:
+  #i - 1 = n (Simon's paper)
+  #**********************************************
+  #INITIALISE PARAMS
+  #**********************************************
+  
+  #MCMC PARAMS + VECTORS
+  time = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
+  count_accept = 0; count_accept_da = 0
+  
+  #THINNING FACTOR
+  if(FLAGS_LIST$THIN){
+    thinning_factor = mcmc_inputs$thinning_factor
+    mcmc_vec_size = n_mcmc/thinning_factor; print(paste0('thinned mcmc vec size = ', mcmc_vec_size))
+  } else {
+    thinning_factor = 1; mcmc_vec_size = n_mcmc
+  }
+  
+  #MODEL PARAMS
+  eta = dataX
+  sigmaX = diag(2); sigmaX[1,1] = 0.5*mod_start_points[1];  sigmaX[2,2] = 0.5*mod_start_points[2]
+  nu_params_matrix = matrix(NA, mcmc_vec_size, dim);   #Changed from 0 to NA (As should be overwriting all cases)
+  nu_params_matrix[1,] <- mcmc_inputs$mod_start_points;
+  nu_params = nu_params_matrix[1,] #2x1 #as.matrix
+  eta_matrix = matrix(NA, mcmc_vec_size, num_days);  #eta_mean_vec <- vector('numeric', mcmc_vec_size);
+  log_like_vec <- vector('numeric', mcmc_vec_size)
+  log_like_vec[1] <- LOG_LIKELIHOOD_NU(dataX, nu_params, eta);  log_like = log_like_vec[1]
+  
+  #MCMC
+  for(i in 2:n_mcmc) {
+
+    if(i%%(n_mcmc/50) == 0) print(paste0('i = ', i))
+    
+    #NU dash
+    nu_params_dash = c(nu_params + mvrnorm(1, mu = rep(0, dim), Sigma = sigmaX)) #Vectorise using c()
+    
+    #ONLY KEEP POSTIVE
+    if (min(nu_params_dash - mcmc_inputs$vec_min) < 0){ #REJECT IF C - 1 <0 I.E C < 1 #Model specific. #
+      
+      #POPULATE VECTORS (ONLY STORE THINNED SAMPLE)
+      if (i%%thinning_factor == 0) {
+        nu_params_matrix[i/thinning_factor,] = nu_params  # i%/%
+        log_like_vec[i/thinning_factor] <- log_like
+      }
+      
+      next
+    }
+    
+    #LOG LIKE
+    logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
+    
+    #ACCEPTANCE RATIO
+    log_accept_ratio = logl_new - log_like #PRIORS?
+    
+    #METROPOLIS ACCEPTANCE STEP
+    if(!(is.na(log_accept_ratio)) && log(runif(1)) < log_accept_ratio) {
+      nu_params <- nu_params_dash
+      count_accept = count_accept + 1
+      log_like = logl_new
+    }
+    
+    #************************************
+    #DATA AUGMENTATION
+    #************************************
+    for(t in 1:time){
+      
+      v = rep(0, length(eta)); v[t] = 1
+      
+      #METROPOLIS STEP 
+      eta_dash = abs(eta + rnorm(1,0,1)*v) #normalise the t_th element of eta #or variance = x[t]
+      
+      #LOG LIKELIHOOD
+      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
+      log_accept_ratio = logl_new - log_like
+      
+      #METROPOLIS ACCEPTANCE STEP
+      if(!(is.na(log_accept_ratio)) && log(runif(1)) < log_accept_ratio) {
+        
+        #ACCEPT
+        eta <- eta_dash
+        log_like <- logl_new
+        count_accept_da = count_accept_da + 1
+      }
+    }
+    
+    #POPULATE VECTORS (ONLY STORE THINNED SAMPLE)
+    if (i%%thinning_factor == 0) {
+      nu_params_matrix[i/thinning_factor,] = nu_params
+      log_like_vec[i/thinning_factor] <- log_like
+      eta_matrix[i/thinning_factor, ] <- eta 
+    }
+    
+  } #END FOR LOOP
+  
+  #Final stats
+  accept_rate = 100*count_accept/(n_mcmc-1)
+  accept_rate_da = 100*count_accept_da/((n_mcmc-1)*time)
+  
+  #Return a, acceptance rate
+  return(list(nu_params_matrix = nu_params_matrix, eta_matrix = eta_matrix,
+              log_like_vec = log_like_vec, lambda_vec = lambda_vec,
+              accept_rate = accept_rate, accept_rate_da = accept_rate_da))
+} 
+
+#**************************
+#APPLY MODELS
+#**************************
+
+#APPLY I
+mcmc_nu = MCMC_ADAPTIVE_MODEL_NU(canadaX)
 
 #SAVE
 iter = 'I'
@@ -234,14 +351,14 @@ saveRDS(mcmc_nu, file = paste0(OUTER_FOLDER, 'mcmc_nu_', iter, '.rds' ))
 #RESULTS
 #OUTPUT
 burn_in = 100
-alpha_mcmc = mcmc_nu$nu_params_matrix[,1]
+alpha_mcmc = mcmc_nu2$nu_params_matrix[,1]
 plot.ts(alpha_mcmc)
 #BURN-IN
 alpha_mcmcB = alpha_mcmc[burn_in:length(alpha_mcmc)]
 plot.ts(alpha_mcmcB)
 
 #k
-k_mcmc = mcmc_nu$nu_params_matrix[,2]
+k_mcmc = mcmc_nu2$nu_params_matrix[,2]
 plot.ts(k_mcmc)
 #BURN-IN
 k_mcmcB = k_mcmc[burn_in:length(k_mcmc)]
@@ -255,4 +372,19 @@ log_like_vec =  mcmc_nu$log_like_vec
 plot.ts(log_like_vec)
 
 #PLOT
+mcmc_nu$time_elap = "25 mins"
 PLOT_NU_MCMC_GRID(canadaX, mcmc_nu)
+
+#**********************
+#APPLY II
+
+#START MCMC
+start_time = Sys.time()
+print(paste0('start_time:', start_time))
+mcmc_nu2 = MCMC_MODEL_NU(canadaX)
+end_time = Sys.time()
+time_elap = get_time(start_time, end_time)
+mcmc_nu2$time_elap = time_elap
+
+#PLOT
+PLOT_NU_MCMC_GRID(canadaX, mcmc_nu2)

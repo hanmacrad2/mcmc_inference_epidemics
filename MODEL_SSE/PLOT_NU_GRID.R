@@ -1,3 +1,6 @@
+#LIBRARIES
+library(coda)
+
 #' Grid Plot of MCMC Individual R0; nu model
 #'
 #'Grid Plot of MCMC Results for  Individual R0; nu model
@@ -50,7 +53,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
                                                 mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                 seed_count = 1,  burn_in_pc = 0.05, thinning_factor = 10,
                                                 eta_time_point = 28),
-                              FLAGS_LIST = list(BURN_IN = FALSE, THIN = TRUE, PRIOR = FALSE,
+                              FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
                                                 ADAPTIVE = FALSE, MULTI_ALG = TRUE)){
                               #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
                               #                   c_prior_ga = c(10, 1), c_prior_exp = c(0.1,0)){
@@ -64,9 +67,9 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   log_like_mcmc = mcmc_output$log_like_vec; log_like_mcmc = unlist(log_like_mcmc)
   
   if (FLAGS_LIST$MULTI_ALG){
-    m1_mcmc = mcmc_output$x_matrix[,1]; m1_mcmc = unlist(m1_mcmc); m1_mcmc = m1_mcmc[!is.na(m1_mcmc)]
-    m2_mcmc = mcmc_output$x_matrix[,2]; m2_mcmc = unlist(m2_mcmc); m2_mcmc = m2_mcmc[!is.na(m2_mcmc)]
-    m3_mcmc = eta_matrix[, mcmc_specs$eta_time_point] 
+    m1_mcmc = mcmc_output$nu_params_matrix[,1]; m1_mcmc = unlist(m1_mcmc); m1_mcmc = m1_mcmc[!is.na(m1_mcmc)]
+    m2_mcmc = mcmc_output$nu_params_matrix[,2]; m2_mcmc = unlist(m2_mcmc); m2_mcmc = m2_mcmc[!is.na(m2_mcmc)]
+    m3_mcmc = mcmc_output$eta_matrix[, mcmc_specs$eta_time_point]; m3_mcmc = unlist(m3_mcmc); m3_mcmc = m3_mcmc[!is.na(m3_mcmc)]
     #m3_mcmc = mcmc_output$x_matrix[,3]; m3_mcmc = unlist(m3_mcmc); m3_mcmc = m3_mcmc[!is.na(m3_mcmc)]
     
   } else {
@@ -97,7 +100,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #LIMITS
   m1_lim =  max(mcmc_specs$mod_start_points$m1[[1]], max(m1_mcmc, na.rm = TRUE))
   m2_lim = max(mcmc_specs$mod_start_points$m2[[1]], max(m2_mcmc, na.rm = TRUE))
-  title_eta = paste(mcmc_specs$mod_par_names[3], "MCMC", "day: ", eta_time_point)
+  title_eta = paste(mcmc_specs$mod_par_names[3], "MCMC.", " Day: ", mcmc_specs$eta_time_point)
   
   #PRIORS
   # #m1
@@ -157,7 +160,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #***************
   #ETA
   if (!FLAGS_LIST$ADAPTIVE){
-    plot.ts(etaX,  ylab = mcmc_specs$mod_par_names[3], #ylim=c(0, m3_lim),
+    plot.ts(m3_mcmc,  ylab = mcmc_specs$mod_par_names[3], #ylim=c(0, m3_lim),
             main = title_eta,
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   } else {
@@ -182,10 +185,10 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #HIST m1
   hist(m1_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[1], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[1],
-                    " prior:", m1_prior),
+       main = paste(mcmc_specs$mod_par_names[1]), #  " prior:", m1_prior),
        xlim=c(0, m1_lim),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  abline(v = mcmc_specs$mod_start_points$m1[[1]], col = 'red', lwd = 2)
   
   #PRIOR PLOT
   if (FLAGS_LIST$PRIOR) {
@@ -200,8 +203,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #HIST m2
   hist(m2_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[2], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[2],
-                    " prior:", m2_prior),
+       main = paste(mcmc_specs$mod_par_names[2]), # " prior:", m2_prior),
        xlim=c(0, m2_lim),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(v = mcmc_specs$mod_start_points$m2[[1]], col = 'blue', lwd = 2)
@@ -221,8 +223,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #Hist m3 (ETA)
   hist(m3_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[3], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[3]),
-                    xlim=c(0, m3_lim),
+       main = paste(mcmc_specs$mod_par_names[3]), #xlim=c(0, m3_lim),
                     cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   #                   " prior:", m3_prior),
   # abline(v = mcmc_specs$mod_start_points$m3[[1]], col = 'green', lwd = 2)#
@@ -247,7 +248,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   
   #m2 mean
-  m2_mean = cumsum(m2_mean)/seq_along(m2_mean)
+  m2_mean = cumsum(m2_mcmc)/seq_along(m2_mcmc)
   plot(seq_along(m2_mean), m2_mean,
        ylim=c(0, m2_lim),
        xlab = 'Time', ylab = mcmc_specs$mod_par_names[2],
@@ -256,9 +257,10 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
        lwd = 1)
   
   #m3 Mean
+  m3_mean = cumsum(m3_mcmc)/seq_along(m3_mcmc)
   plot(seq_along(m3_mean), m3_mean,
        xlab = 'Time', ylab = mcmc_specs$mod_par_names[3],
-       main = title_eta,
+       main = paste0(title_eta, '; mean'), 
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
        lwd = 1)
   
@@ -280,9 +282,9 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
           cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   
   #alpha vs k
-  plot(m1_mcmc, r0_mcmc,
-       xlab = mcmc_specs$mod_par_names[1], ylab = 'R0',
-       main = paste0(mcmc_specs$mod_par_names[1], ' vs R0'),
+  plot(m1_mcmc, m2_mcmc,
+       xlab = mcmc_specs$mod_par_names[1], ylab = mcmc_specs$mod_par_names[2],
+       main = paste0(mcmc_specs$mod_par_names[1], ' vs ', mcmc_specs$mod_par_names[2]),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
        cex = 0.5)
   
@@ -294,30 +296,23 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #      cex = 0.5)
   
   #********************
-  #v. DATAFRAME
+  #v. DATAFRAME: RESULTS
   #********************
-  
-  #FINAL MEAN STATS
-  m1_mean_tail = round(mean(m1_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2)
-  print(paste0('m1_mean_tail: ', m1_mean_tail))
-  m2_mean_tail = round(mean(m2_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2)
-  m3_mean_tail = round(mean(m3_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2)
-
-  #RESULTS
-  df_results <- data.frame(
+ 
+   df_results <- data.frame(
     rep = mcmc_specs$seed_count,
     mcmc_vec_size = mcmc_vec_size,
     alpha_start = mcmc_specs$mod_start_points$m1[[1]],
-    alpha_mean_mcmc = round(mean(m1_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2),
-    k_start = mcmc_specs$mod_start_points$m2[[1]],
-    k_mean_mcmc = m2_mean_tail,
-    eta_mean_mcmc = m3_mean_tail,
-    accept_rate_m1 = round(mcmc_output$accept_rate, 2),
+    alpha_mean_mcmc = round(mean(m1_mcmc), 2), #round(mean(m1_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2),
+    k_start = mcmc_specs$mod_start_points$m2[[1]], 
+    k_mean_mcmc = round(mean(m2_mcmc), 2),
+    eta_mean_mcmc = round(mean(m3_mcmc), 2),
+    accept_rate = round(mcmc_output$accept_rate, 2),
     a_rte_d_aug = round(mcmc_output$accept_rate_da, 2),
-    a_es = effectiveSize(as.mcmc(m1_mcmc))[[1]],
-    b_es = effectiveSize(as.mcmc(m2_mcmc))[[1]],
-    c_es = effectiveSize(as.mcmc(m3_mcmc))[[1]],
-    time_elap = format(mcmc_output$time_elap, format = "%H:%M:%S")[1])
+    alpha_es = round(effectiveSize(as.mcmc(m1_mcmc))[[1]], 2),
+    k_es = round(effectiveSize(as.mcmc(m2_mcmc))[[1]], 2),
+    eta_es = round(effectiveSize(as.mcmc(m3_mcmc))[[1]], 2),
+    time_elap = mcmc_output$time_elap) #format(mcmc_output$time_elap, format = "%H:%M:%S")[1])
   
   print(df_results)
   
