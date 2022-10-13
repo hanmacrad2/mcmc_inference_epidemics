@@ -53,24 +53,16 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
   
   for (t in 2:num_days) {
     
-    #OFFSPRING; POISSON()
+    #INFECTIVITY
     infectivity = rev(prob_infect[1:t-1]) #Current infectivity dependent on people already infected #rev(prob_infect[1:(t-1)]) 
-    total_rate = sum(eta[1:(t-1)]*infectivity) #SHOULD ETA BE LENGTH NUM_DAYS --> WORK OUT
-    #print(paste0('total rate = ', total_rate))
+    total_rate = sum(eta[1:(t-1)]*infectivity) 
     
-    #dgamma #EXPLAIN DGAMMA??
-    eta_prob = dgamma(eta[t-1], shape = x[t-1]*k, scale = alpha/k, log = TRUE)
-    if (!is.infinite(eta_prob)) loglike = loglike + eta_prob
-    loglike = loglike + x[t]*log(total_rate) - total_rate - lfactorial(x[t]) #Need to include normalizing constant 
-    #print(paste0('t:', t, 'loglike 2', loglike))
-    #if (is.infinite(loglike))  count_inf = count_inf + 1 #print(paste0('t:', t, 'loglike poisson'))
-    
+    eta_prob = dgamma(eta[t-1], shape = x[t-1]*k, scale = alpha/k, log = TRUE) #Infite if x[t] = 0
+    if (!is.infinite(eta_prob)) loglike = loglike + eta_prob 
+    loglike = loglike + x[t]*log(total_rate) - total_rate - lfactorial(x[t]) 
   }
   
-  #print(paste0('count_inf: ', count_inf ))
-  
   return(loglike)
-  
 }
 
 #********************************************************
@@ -229,10 +221,10 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
 #1. INDIVIDUAL R0 MCMC                            
 #********************************************************
 MCMC_MODEL_NU <- function(dataX,
-                          mcmc_inputs = list(n_mcmc = 30000,
+                          mcmc_inputs = list(n_mcmc = 10000,
                                              mod_start_points = c(1.2, 0.16),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
-                                             thinning_factor = 3, dim = 2, seed_count = 1),
-                          FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
+                                             thinning_factor = 10, dim = 2, seed_count = 1),
+                          FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = FALSE)) {    
   
   #NOTE:
   #i - 1 = n (Simon's paper)
@@ -241,7 +233,7 @@ MCMC_MODEL_NU <- function(dataX,
   #**********************************************
   
   #MCMC PARAMS + VECTORS
-  num_days = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
+  num_days = length(dataX); n_mcmc = mcmc_inputs$n_mcmc; seed_count = mcmc_inputs$seed_count
   count_accept = 0; count_accept_da = 0; dim = mcmc_inputs$dim
   vec_min = rep(0, dim) 
   
@@ -250,7 +242,7 @@ MCMC_MODEL_NU <- function(dataX,
     thinning_factor = mcmc_inputs$thinning_factor
     mcmc_vec_size = n_mcmc/thinning_factor; print(paste0('thinned mcmc vec size = ', mcmc_vec_size))
   } else {
-    thinning_factor = 1; mcmc_vec_size = n_mcmc
+    thinning_factor = 1; mcmc_vec_size = n_mcmc; print(paste0('mcmc vec size = ', mcmc_vec_size))
   }
   
   #MODEL PARAMS
