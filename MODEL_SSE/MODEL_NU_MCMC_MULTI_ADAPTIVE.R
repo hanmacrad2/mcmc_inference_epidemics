@@ -1,5 +1,6 @@
 #MODEL INDIVIDUAL NU
 library(MASS)
+source("~/Github/epidemic_modelling/helper_functions.R")
 #****************************
 #SIMULATION
 #*****************************
@@ -78,7 +79,7 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
 MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
                           mcmc_inputs = list(n_mcmc = 100000,
                                              mod_start_points = c(1.2, 0.16),
-                                             dim = 2, alpha_star = 0.4, v0 = 100, vec_min = c(0,0),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
+                                             dim = 2, alpha_star = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                              thinning_factor = 10),
                           FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
   
@@ -91,6 +92,7 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
   #MCMC PARAMS + VECTORS
   time = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
   dim = mcmc_inputs$dim; count_accept = 0; count_accept_da = 0
+  vec_min = rep(0, mcmc_inputs$dim) 
   
   #THINNING FACTOR
   if(FLAGS_LIST$THIN){
@@ -136,7 +138,7 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
     nu_params_dash = c(nu_params + mvrnorm(1, mu = rep(0, dim), Sigma = lambda_i*c_star*sigma_i)) #Vectorise using c()
     
     #ONLY KEEP POSTIVE
-    if (min(nu_params_dash - mcmc_inputs$vec_min) < 0){ #REJECT IF C - 1 <0 I.E C < 1 #Model specific. #
+    if (min(nu_params_dash - vec_min) < 0){ #REJECT IF C - 1 <0 I.E C < 1 #Model specific. #
       
       #POPULATE VECTORS (ONLY STORE THINNED SAMPLE)
       if (i%%thinning_factor == 0) {
@@ -226,9 +228,9 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
 #1. INDIVIDUAL R0 MCMC                            
 #********************************************************
 MCMC_MODEL_NU <- function(dataX,
-                          mcmc_inputs = list(n_mcmc = 100000,
+                          mcmc_inputs = list(n_mcmc = 100,
                                              mod_start_points = c(1.2, 0.16),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
-                                             thinning_factor = 10, vec_min = c(0,0)),
+                                             thinning_factor = 3, dim = 2, seed_count = 1),
                           FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = FALSE)) {    
   
   #NOTE:
@@ -239,7 +241,8 @@ MCMC_MODEL_NU <- function(dataX,
   
   #MCMC PARAMS + VECTORS
   time = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
-  count_accept = 0; count_accept_da = 0
+  count_accept = 0; count_accept_da = 0; dim = mcmc_inputs$dim
+  vec_min = rep(0, dim) 
   
   #THINNING FACTOR
   if(FLAGS_LIST$THIN){
@@ -251,7 +254,10 @@ MCMC_MODEL_NU <- function(dataX,
   
   #MODEL PARAMS
   eta = dataX
-  sigmaX = diag(2); sigmaX[1,1] = 0.5*mod_start_points[1];  sigmaX[2,2] = 0.5*mod_start_points[2]
+  #SIGMA
+  sigmaX = diag(2); 
+  sigmaX[1,1] = 0.5*mcmc_inputs$mod_start_points[1];  sigmaX[2,2] = 0.5*mcmc_inputs$mod_start_points[2]
+  #NU
   nu_params_matrix = matrix(NA, mcmc_vec_size, dim);   #Changed from 0 to NA (As should be overwriting all cases)
   nu_params_matrix[1,] <- mcmc_inputs$mod_start_points;
   nu_params = nu_params_matrix[1,] #2x1 #as.matrix
@@ -323,6 +329,11 @@ MCMC_MODEL_NU <- function(dataX,
       eta_matrix[i/thinning_factor, ] <- eta 
     }
     
+    if (i == 20000) {
+      saveRDS(nu_params_matrix, file = paste0(OUTER_FOLDER, 'nu_params_matrix_', seed_count, '.rds' ))
+      saveRDS(eta_matrix, file = paste0(OUTER_FOLDER, 'eta_matrix_', seed_count, '.rds' ))
+      saveRDS(log_like_vec, file = paste0(OUTER_FOLDER, 'log_like_vec_', seed_count, '.rds' ))
+    }
   } #END FOR LOOP
   
   #Final stats
@@ -330,8 +341,8 @@ MCMC_MODEL_NU <- function(dataX,
   accept_rate_da = 100*count_accept_da/((n_mcmc-1)*time)
   
   #Return a, acceptance rate
-  return(list(nu_params_matrix = nu_params_matrix, eta_matrix = eta_matrix,
-              log_like_vec = log_like_vec, lambda_vec = lambda_vec,
+  return(list(nu_params_matrix = nu_params_matrix, 
+              eta_matrix = eta_matrix, log_like_vec = log_like_vec,
               accept_rate = accept_rate, accept_rate_da = accept_rate_da))
 } 
 
@@ -343,7 +354,7 @@ MCMC_MODEL_NU <- function(dataX,
 mcmc_nu = MCMC_ADAPTIVE_MODEL_NU(canadaX)
 
 #SAVE
-iter = 'I'
+iter = 'II'
 OUTER_FOLDER = "~/PhD_Warwick/Project_Epidemic_Modelling/Results/model_individual_nu/"
 ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
 saveRDS(mcmc_nu, file = paste0(OUTER_FOLDER, 'mcmc_nu_', iter, '.rds' ))
