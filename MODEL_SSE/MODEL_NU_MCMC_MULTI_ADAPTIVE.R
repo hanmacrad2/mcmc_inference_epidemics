@@ -5,6 +5,9 @@ source("~/Github/epidemic_modelling/helper_functions.R")
 #****************************
 #SIMULATION
 #*****************************
+
+#*SIMULATION FUNCTION ISN'T CORRECT!
+#*Simulate; start with eta_1, get x2, eta_2, x3... eta_n-1; x_n
 SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
                        shape_gamma = 6, scale_gamma = 1) {
   
@@ -221,7 +224,7 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
 #1. INDIVIDUAL R0 MCMC                            
 #********************************************************
 MCMC_MODEL_NU <- function(dataX,
-                          mcmc_inputs = list(n_mcmc = 10000,
+                          mcmc_inputs = list(n_mcmc = 1000,
                                              mod_start_points = c(1.2, 0.16),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                              thinning_factor = 10, dim = 2, seed_count = 1),
                           FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = FALSE)) {    
@@ -302,7 +305,7 @@ MCMC_MODEL_NU <- function(dataX,
       eta_dash = abs(eta + rnorm(1,0,1)*v) #normalise the t_th element of eta #or variance = x[t]
       
       #LOG LIKELIHOOD
-      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
+      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta_dash)
       log_accept_ratio = logl_new - log_like
       
       #METROPOLIS ACCEPTANCE STEP
@@ -344,6 +347,16 @@ MCMC_MODEL_NU <- function(dataX,
 #********************************************************
 #APPLY MODELS                        
 #********************************************************
+
+
+#********************************************************
+#1. SIMULATE DATA                        
+#********************************************************
+
+#Attempt I
+seedX = 1; set.seed(seedX)
+dataX = SIMULATE_NU()
+plot.ts(dataX)
 
 #APPLY I
 mcmc_nu = MCMC_ADAPTIVE_MODEL_NU(canadaX)

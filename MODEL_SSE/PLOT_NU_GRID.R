@@ -49,7 +49,7 @@ library(coda)
 #' df_mcmc_results = PLOT_SS_MCMC_GRID(epidemic_data, mcmc_output) 
 
 PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
-                              mcmc_specs = list(model_type = 'NU', n_mcmc = 100,
+                              mcmc_specs = list(model_type = 'NU', n_mcmc = 1000,
                                                 mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                 seed_count = 1,  burn_in_pc = 0.05, thinning_factor = 10,
                                                 eta_time_point = 28),
@@ -310,9 +310,9 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
     eta_mean_mcmc = round(mean(m3_mcmc), 2),
     accept_rate = round(mcmc_output$accept_rate, 2),
     a_rte_d_aug = round(mcmc_output$accept_rate_da, 2),
-    alpha_es = round(effectiveSize(as.mcmc(m1_mcmc))[[1]], 2),
-    k_es = round(effectiveSize(as.mcmc(m2_mcmc))[[1]], 2),
-    eta_es = round(effectiveSize(as.mcmc(m3_mcmc))[[1]], 2),
+    #alpha_es = round(effectiveSize(as.mcmc(m1_mcmc))[[1]], 2),
+    #k_es = round(effectiveSize(as.mcmc(m2_mcmc))[[1]], 2),
+    #eta_es = round(effectiveSize(as.mcmc(m3_mcmc))[[1]], 2),
     time_elap = mcmc_output$time_elap) #format(mcmc_output$time_elap, format = "%H:%M:%S")[1])
   
   print(df_results)
