@@ -1,5 +1,6 @@
 #MODEL INDIVIDUAL NU
 library(MASS)
+library(coda)
 source("~/Github/epidemic_modelling/helper_functions.R")
 #****************************
 #SIMULATION
@@ -90,7 +91,7 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
   #**********************************************
   
   #MCMC PARAMS + VECTORS
-  time = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
+  num_days = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
   dim = mcmc_inputs$dim; count_accept = 0; count_accept_da = 0
   vec_min = rep(0, mcmc_inputs$dim) 
   
@@ -183,7 +184,7 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
     #************************************
     #DATA AUGMENTATION
     #************************************
-    for(t in 1:time){
+    for(t in 1:num_days){
       
       v = rep(0, length(eta)); v[t] = 1
       
@@ -216,7 +217,7 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
   
   #Final stats
   accept_rate = 100*count_accept/(n_mcmc-1)
-  accept_rate_da = 100*count_accept_da/((n_mcmc-1)*time)
+  accept_rate_da = 100*count_accept_da/((n_mcmc-1)*num_days)
 
   #Return a, acceptance rate
   return(list(nu_params_matrix = nu_params_matrix, eta_matrix = eta_matrix,
@@ -228,10 +229,10 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX,
 #1. INDIVIDUAL R0 MCMC                            
 #********************************************************
 MCMC_MODEL_NU <- function(dataX,
-                          mcmc_inputs = list(n_mcmc = 100,
+                          mcmc_inputs = list(n_mcmc = 30000,
                                              mod_start_points = c(1.2, 0.16),  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                              thinning_factor = 3, dim = 2, seed_count = 1),
-                          FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = FALSE)) {    
+                          FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
   
   #NOTE:
   #i - 1 = n (Simon's paper)
@@ -240,7 +241,7 @@ MCMC_MODEL_NU <- function(dataX,
   #**********************************************
   
   #MCMC PARAMS + VECTORS
-  time = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
+  num_days = length(dataX); n_mcmc = mcmc_inputs$n_mcmc;
   count_accept = 0; count_accept_da = 0; dim = mcmc_inputs$dim
   vec_min = rep(0, dim) 
   
@@ -301,7 +302,7 @@ MCMC_MODEL_NU <- function(dataX,
     #************************************
     #DATA AUGMENTATION
     #************************************
-    for(t in 1:time){
+    for(t in 1:num_days){
       
       v = rep(0, length(eta)); v[t] = 1
       
@@ -338,7 +339,7 @@ MCMC_MODEL_NU <- function(dataX,
   
   #Final stats
   accept_rate = 100*count_accept/(n_mcmc-1)
-  accept_rate_da = 100*count_accept_da/((n_mcmc-1)*time)
+  accept_rate_da = 100*count_accept_da/((n_mcmc-1)*num_days)
   
   #Return a, acceptance rate
   return(list(nu_params_matrix = nu_params_matrix, 
@@ -346,9 +347,11 @@ MCMC_MODEL_NU <- function(dataX,
               accept_rate = accept_rate, accept_rate_da = accept_rate_da))
 } 
 
-#**************************
-#APPLY MODELS
-#**************************
+#****************************************************************************************************************
+
+#********************************************************
+#APPLY MODELS                        
+#********************************************************
 
 #APPLY I
 mcmc_nu = MCMC_ADAPTIVE_MODEL_NU(canadaX)

@@ -49,11 +49,11 @@ library(coda)
 #' df_mcmc_results = PLOT_SS_MCMC_GRID(epidemic_data, mcmc_output) 
 
 PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
-                              mcmc_specs = list(model_type = 'NU', n_mcmc = 100000,
+                              mcmc_specs = list(model_type = 'NU', n_mcmc = 100,
                                                 mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                 seed_count = 1,  burn_in_pc = 0.05, thinning_factor = 10,
                                                 eta_time_point = 28),
-                              FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
+                              FLAGS_LIST = list(BURN_IN = TRUE, THIN = FALSE, PRIOR = FALSE,
                                                 ADAPTIVE = FALSE, MULTI_ALG = TRUE)){
                               #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
                               #                   c_prior_ga = c(10, 1), c_prior_exp = c(0.1,0)){
@@ -83,6 +83,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
     thinning_factor = mcmc_specs$thinning_factor
     mcmc_vec_size = n_mcmc/thinning_factor; print(paste0('thinned mcmc vec size = ', mcmc_vec_size))
   } else {
+    mcmc_vec_size = mcmc_specs$n_mcmc
     print(paste0('mcmc vec size = ', mcmc_vec_size))
   }
   
