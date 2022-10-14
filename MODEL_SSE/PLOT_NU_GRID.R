@@ -49,9 +49,9 @@ library(coda)
 #' df_mcmc_results = PLOT_SS_MCMC_GRID(epidemic_data, mcmc_output) 
 
 PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
-                              mcmc_specs = list(model_type = 'NU', n_mcmc = 1000,
+                              mcmc_specs = list(model_type = 'NU', n_mcmc = 100,
                                                 mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
-                                                seed_count = 1,  burn_in_pc = 0.05, thinning_factor = 10,
+                                                seed_count = 1,  burn_in_pc = 0.05, thinning_factor = 1,
                                                 eta_time_point = 28),
                               FLAGS_LIST = list(BURN_IN = TRUE, THIN = FALSE, PRIOR = FALSE,
                                                 ADAPTIVE = FALSE, MULTI_ALG = TRUE)){
@@ -146,7 +146,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #***************
   #b
   if (!FLAGS_LIST$ADAPTIVE){
-    plot.ts(m2_mcmc, ylab = mcmc_specs$mod_par_names[3], ylim=c(0, max(m2_mcmc)),
+    plot.ts(m2_mcmc, ylab = mcmc_specs$mod_par_names[3], #ylim=c(0, max(m2_mcmc)),
             main = paste(mcmc_specs$mod_par_names[2], "MCMC",
                          "Start: ", mcmc_specs$mod_start_points$m2),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
