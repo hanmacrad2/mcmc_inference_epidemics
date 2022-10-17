@@ -48,13 +48,13 @@ library(coda)
 #'
 #' df_mcmc_results = PLOT_SS_MCMC_GRID(epidemic_data, mcmc_output) 
 
-PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
-                              mcmc_specs = list(model_type = 'NU', n_mcmc = 100,
+PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output, seed_count,
+                              mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100000,
                                                 mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
-                                                seed_count = 1,  burn_in_pc = 0.05, thinning_factor = 1,
+                                                burn_in_pc = 0.05, thinning_factor = 10,
                                                 eta_time_point = 28),
-                              FLAGS_LIST = list(BURN_IN = TRUE, THIN = FALSE, PRIOR = FALSE,
-                                                ADAPTIVE = FALSE, MULTI_ALG = TRUE)){
+                              FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
+                                                ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
                               #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
                               #                   c_prior_ga = c(10, 1), c_prior_exp = c(0.1,0)){
   
@@ -70,6 +70,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
     m1_mcmc = mcmc_output$nu_params_matrix[,1]; m1_mcmc = unlist(m1_mcmc); m1_mcmc = m1_mcmc[!is.na(m1_mcmc)]
     m2_mcmc = mcmc_output$nu_params_matrix[,2]; m2_mcmc = unlist(m2_mcmc); m2_mcmc = m2_mcmc[!is.na(m2_mcmc)]
     m3_mcmc = mcmc_output$eta_matrix[, mcmc_specs$eta_time_point]; m3_mcmc = unlist(m3_mcmc); m3_mcmc = m3_mcmc[!is.na(m3_mcmc)]
+    sigma_eta_X = mcmc_output$sigma_eta_matrix[, mcmc_specs$eta_time_point]; sigma_eta_X = unlist(sigma_eta_X); sigma_eta_X = sigma_eta_X[!is.na(sigma_eta_X)]
     #m3_mcmc = mcmc_output$x_matrix[,3]; m3_mcmc = unlist(m3_mcmc); m3_mcmc = m3_mcmc[!is.na(m3_mcmc)]
     
   } else {
@@ -261,7 +262,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   m3_mean = cumsum(m3_mcmc)/seq_along(m3_mcmc)
   plot(seq_along(m3_mean), m3_mean,
        xlab = 'Time', ylab = mcmc_specs$mod_par_names[3],
-       main = paste0(title_eta, '; mean'), 
+       main = paste0('Mean ', title_eta), 
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
        lwd = 1)
   
@@ -277,7 +278,7 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #********************
   
   #i. TOTAL INFECTIONS
-  inf_tite = paste0(mcmc_specs$seed_count, ' ', mcmc_specs$model_type, " Data")
+  inf_tite = paste0(seed_count, ' ', mcmc_specs$model_type, " Data")
   plot.ts(epidemic_data, xlab = 'Time', ylab = 'Daily Infections count',
           main = inf_tite,
           cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
@@ -296,12 +297,28 @@ PLOT_NU_MCMC_GRID <- function(epidemic_data, mcmc_output,
   #      cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
   #      cex = 0.5)
   
+  #**********************************
+  #ROW 6: ADAPTIVE PARAMETERS
+  #*************************************
+  if (FLAGS_LIST$ADAPTIVE_II){
+    
+    #1. SIGMA ETA
+    plot.ts(sigma_eta_X,  ylab = paste0('sigma ', mcmc_specs$mod_par_names[3]), 
+            main = paste0('Sigma ', title_eta),
+            cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+    
+    #2. LAMDA
+    plot.ts(mcmc_output$lambda_vec,  ylab = 'lamda adaptive',
+            main = 'Lamda adaptive',
+            cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  }
+  
   #********************
   #v. DATAFRAME: RESULTS
   #********************
  
    df_results <- data.frame(
-    rep = mcmc_specs$seed_count,
+    rep = seed_count,
     mcmc_vec_size = mcmc_vec_size,
     alpha_start = mcmc_specs$mod_start_points$m1[[1]],
     alpha_mean_mcmc = round(mean(m1_mcmc), 2), #round(mean(m1_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2),
