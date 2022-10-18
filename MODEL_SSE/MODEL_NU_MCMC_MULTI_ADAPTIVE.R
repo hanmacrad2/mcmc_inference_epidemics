@@ -35,7 +35,34 @@ SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
   }
   return(x)
 }
-
+#
+SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
+                       shape_gamma = 6, scale_gamma = 1) {
+  
+  'Simulate from the Negative Binomial model'
+  
+  #INTIALISE VECTORS
+  x = vector('numeric', num_days); x[1] = 2
+  
+  #INFECTIOUSNESS (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
+  prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
+  
+  eta_vec = vector('numeric', num_days); 
+  
+  #DAYS OF THE EPIDEMIC
+  for (t in 2:num_days) {
+    
+    #ETA (t-1)
+    eta_vec[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k) #Draw eta from previous time step
+    #INFECTIVITY
+    infectivity = rev(prob_infect[1:t]) 
+    #POISSON; OFFSPRINT DISTRIBUTION
+    total_rate = sum(eta_vec*infectivity)
+    x[t] = rpois(1, total_rate)
+    
+  }
+  return(list(epidemic_data = x, eta_vec = eta_vec))
+}
 
 #**********************************************
 #LOG LIKELIHOOD
@@ -72,10 +99,10 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
 #********************************************************
 #NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
 MCMC_ADAPTIVE_MODEL_NU <- function(dataX, OUTER_FOLDER, seed_count,
-                          mcmc_inputs = list(n_mcmc = 100000,
+                          mcmc_inputs = list(n_mcmc = 100, #000,
                                              mod_start_points = c(1.2, 0.16),
                                              dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
-                                             thinning_factor = 10),
+                                             thinning_factor = 1),
                           FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
   
   #NOTE:
@@ -190,7 +217,7 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX, OUTER_FOLDER, seed_count,
       eta_dash = abs(eta + rnorm(1,0,sigma_eta[t])*v) #normalise the t_th element of eta #or variance = x[t]
       
       #LOG LIKELIHOOD
-      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta_dash)
+      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params, eta_dash)
       log_accept_ratio = logl_new - log_like
       
       #METROPOLIS ACCEPTANCE STEP
@@ -425,22 +452,26 @@ PLOT_NU_MCMC_GRID(canadaX, mcmc_nu2)
 #* APPLY + SIMULATIONS 
 #***************************************
 
+#SET SEED + RETURN ETA!!
+
 #DATA
 seedX = 1; 
 seedX = seedX + 1
 print(paste0('seed = ', seedX))
-set.seed(seedX)
-dataIII = SIMULATE_NU()
-plot.ts(dataII) #DATA II LOOKS GOOD; SEED = 7
+set.seed(4) #(seedX)
+simX = SIMULATE_NU()
+dataIII = simX$epidemic_data
+plot.ts(dataIII) #DATA II LOOKS GOOD; SEED = 7. seed 4
 
 #START MCMC
+seedX = 4
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc_nuX = MCMC_ADAPTIVE_MODEL_NU(dataII, OUTER_FOLDER, seedX)
+mcmc_nuXX = MCMC_ADAPTIVE_MODEL_NU(dataI, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc_nuX$time_elap = time_elap
+mcmc_nuXX$time_elap = time_elap
 
 #PLOT (*FIX PLOT FOR SIMULATION)
-PLOT_NU_MCMC_GRID(dataII, mcmc_nuX, seedX)
+PLOT_NU_MCMC_GRID(dataI, mcmc_nuXX, seedX, simX$eta_vec)
 
