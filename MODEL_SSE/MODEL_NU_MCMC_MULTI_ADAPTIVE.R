@@ -99,10 +99,10 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
 #********************************************************
 #NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
 MCMC_ADAPTIVE_MODEL_NU <- function(dataX, OUTER_FOLDER, seed_count,
-                          mcmc_inputs = list(n_mcmc = 100, #000,
+                          mcmc_inputs = list(n_mcmc = 20000, #000,
                                              mod_start_points = c(1.2, 0.16),
                                              dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
-                                             thinning_factor = 1),
+                                             thinning_factor = 2),
                           FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
   
   #NOTE:
@@ -459,19 +459,28 @@ seedX = 1;
 seedX = seedX + 1
 print(paste0('seed = ', seedX))
 set.seed(4) #(seedX)
+
+#SEED
+seedX = 7
+set.seed(7)
 simX = SIMULATE_NU()
-dataIII = simX$epidemic_data
-plot.ts(dataIII) #DATA II LOOKS GOOD; SEED = 7. seed 4
+dataII = simX$epidemic_data
+plot.ts(dataII) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+#LIKELIHOOD
+loglike = LOG_LIKELIHOOD_NU(dataII, c(1.2,0.16), simX$eta_vec)
+loglike
 
 #START MCMC
-seedX = 4
+seedX = 7
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc_nuXX = MCMC_ADAPTIVE_MODEL_NU(dataI, OUTER_FOLDER, seedX)
+mcmc_nuX = MCMC_ADAPTIVE_MODEL_NU(dataII, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc_nuXX$time_elap = time_elap
+mcmc_nuX$time_elap = time_elap
 
 #PLOT (*FIX PLOT FOR SIMULATION)
-PLOT_NU_MCMC_GRID(dataI, mcmc_nuXX, seedX, simX$eta_vec)
+dfII = PLOT_NU_MCMC_GRID(dataII, mcmc_nuX, seedX, simX$eta_vec, loglike)
 
+
+sigma_etaX = mcmc_nuX$sigma_eta_matrix
