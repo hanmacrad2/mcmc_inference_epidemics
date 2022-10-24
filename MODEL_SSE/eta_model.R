@@ -41,46 +41,29 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX, OUTER_FOLDER, seed_count,
   lambda_vec <- vector('numeric', mcmc_vec_size); lambda_vec[1] <- 1
   c_star = (2.38^2)/dim; termX = mcmc_inputs$v0 + dim
   delta = 1/(mcmc_inputs$target_acceptance_rate*(1 - mcmc_inputs$target_acceptance_rate))
-  print(paste0('delta = ', delta))
+  x_bar = 0.5*(nu_params + nu_params_matrix[1,])
   sigma_i = diag(dim); lambda_i = 1
+  sigma_i = (1/(termX + 3))*(tcrossprod(nu_params_matrix[1,]) + tcrossprod(nu_params) -
+                               2*tcrossprod(x_bar) + (termX + 1)*sigma_i) #CHANGE TO USE FUNCTIONS
   
-  #ETA (ONE DIMENSION - ROBINS MUNROE)
+  #ETA (ONE DIMENSION - ROBINS MUNROE) 
   sigma_eta =  0.5*rep(1, num_days)
-  sigma_eta_matrix = matrix(0, mcmc_vec_size, num_days);
-  sigma_eta_matrix[1,] =  sigma_eta;
+  sigma_eta_matrix = matrix(0, mcmc_vec_size, num_days); sigma_eta_matrix[1,] =  sigma_eta;
   delta_eta = 1/(mcmc_inputs$target_acceptance_rate*(1-mcmc_inputs$target_acceptance_rate))
   
   #MCMC
   for(i in 2:n_mcmc) {
     
-    if(i%%(n_mcmc/50) == 0) print(paste0('i = ', i))
+    if(i%%(n_mcmc/100) == 0) print(paste0('i = ', i))
     
-    #SIGMA ITERATION NO.1
-    if (i == 2){
-      x_bar = 0.5*(nu_params + nu_params_matrix[1,])
-      sigma_i = (1/(termX + 3))*(tcrossprod(nu_params_matrix[1,]) + tcrossprod(nu_params) -
-                                   2*tcrossprod(x_bar) + (termX + 1)*sigma_i) #CHANGE TO USE FUNCTIONS
-    }
+    #PROPOSAL
+    nu_params_dash = c(nu_params + mvrnorm(1, mu = rep(0, dim), Sigma = lambda_i*c_star*sigma_i)) 
     
-    nu_params_dash = c(nu_params + mvrnorm(1, mu = rep(0, dim), Sigma = lambda_i*c_star*sigma_i)) #Vectorise using c()
+    #POSTIVE ONLY
+    if (min(nu_params_dash - vec_min) >= 0){ 
     
-    #ONLY KEEP POSTIVE
-    if (min(nu_params_dash - vec_min) >= 0){ #REJECT IF C - 1 <0 I.E C < 1 #Model specific. #
-      
-      #POPULATE VECTORS (ONLY STORE THINNED SAMPLE)
-    #   if (i%%thinning_factor == 0) {
-    #     nu_params_matrix[i/thinning_factor,] = nu_params  # i%/%
-    #     log_like_vec[i/thinning_factor] <- log_like
-    #     lambda_vec[i/thinning_factor] <- lambda_i #Taking role of sigma, overall scaling constant. Sigma becomes estimate of the covariance matrix of the posterior
-    #   }
-    #   
-    #   next
-    # }
-    
-    #LOG LIKE
+    #LOG LIKELIHOOD
     logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
-    #print(paste0('logl_new', logl_new))
-    
     #ACCEPTANCE RATIO
     log_accept_ratio = logl_new - log_like #PRIORS?
     
@@ -103,9 +86,6 @@ MCMC_ADAPTIVE_MODEL_NU <- function(dataX, OUTER_FOLDER, seed_count,
     
     #LAMBDA - ADAPTIVE SCALING
     accept_prob = min(1, exp(log_accept_ratio))
-    #lambda_i =  lambda_i*exp(delta/i*(accept_prob - mcmc_inputs$target_acceptance_rate))
-    #print(paste0('lambda_i = ', lambda_i))
-    #print(paste0('accept_prob = ', accept_prob))
     
     } else {
       
