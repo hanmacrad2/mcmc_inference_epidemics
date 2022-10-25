@@ -54,7 +54,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
                                                  mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10, #0,
                                                  eta_time_point = 40), #28
-                               priors_list = list(k_prior = c(0.1,0)),
+                               priors_list = list(k_prior = c(1,0)),
                                FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
                                                  ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
   #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100

@@ -42,8 +42,8 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
                                                  dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                                  thinning_factor = 10),
                               priors_list = list(k_prior = c(0.1, 0)),
-                              FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE, PRIOR_K1 = FALSE,
-                                                PRIOR_K2 = TRUE)) {    
+                              FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE, PRIOR_K1 = TRUE,
+                                                PRIOR_K2 = FALSE)) {    
   
   #NOTE:
   #i - 1 = n (Simon's paper); #NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
