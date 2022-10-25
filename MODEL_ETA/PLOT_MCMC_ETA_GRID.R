@@ -54,6 +54,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
                                                  mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10, #0,
                                                  eta_time_point = 40), #28
+                               priors_list = list(k_prior = c(0.1,0)),
                                FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
                                                  ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
   #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
@@ -93,10 +94,9 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #BURN IN
   if (FLAGS_LIST$BURN_IN){
     burn_in = mcmc_specs$burn_in_pc*mcmc_vec_size
-    m1_mcmc = m1_mcmc[burn_in:mcmc_vec_size]
-    m2_mcmc = m2_mcmc[burn_in:mcmc_vec_size]
-    m3_mcmc = m3_mcmc[burn_in:mcmc_vec_size]
-    log_like_mcmc = log_like_mcmc[burn_in:mcmc_vec_size]
+    m1_mcmc = m1_mcmc[burn_in:mcmc_vec_size]; m2_mcmc = m2_mcmc[burn_in:mcmc_vec_size]
+    m3_mcmc = m3_mcmc[burn_in:mcmc_vec_size]; log_like_mcmc = log_like_mcmc[burn_in:mcmc_vec_size]
+    sigma_eta_X = sigma_eta_X[burn_in:mcmc_vec_size]; 
   } else {
     burn_in = 0
   }
@@ -109,6 +109,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #LIMITS
   m1_lim = c(m1_min, m1_max);  m2_lim = c(m2_min, m2_max);  m3_lim = c(m3_min, m3_max); m4_lim = c(minll, maxll)
   title_eta = paste(mcmc_specs$mod_par_names[3], "MCMC.", " Day: ", mcmc_specs$eta_time_point)
+  m2_prior =  paste0('exp(', priors_list$k_prior[1], ')')
   
   #PRIORS
   # #m1
@@ -196,7 +197,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #HIST m1
   hist(m1_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[1], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[1]), #  " prior:", m1_prior),
+       main = paste0(mcmc_specs$mod_par_names[1], ' (Mean of Gamma pdf)'), #  " prior:", m1_prior),
        xlim = m1_lim,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(v = mcmc_specs$mod_start_points$m1, col = 'red', lwd = 2)
@@ -214,10 +215,15 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #HIST m2
   hist(m2_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[2], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[2]), # " prior:", m2_prior),
+       main = paste(mcmc_specs$mod_par_names[2], ". prior:", m2_prior),
        xlim= m2_lim,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(v = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2)
+  
+  #Prior plot
+  xseq = seq(0, 1.5, length.out = 500)
+  lines(xseq, dexp(xseq, priors_list$k_prior[1]),
+        type = 'l', lwd = 2, col = 'blue')
   
   #PRIOR PLOT
   # if (FLAGS_LIST$B_PRIOR_GAMMA) {
@@ -325,7 +331,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     
     #2. LAMDA
-    plot.ts(mcmc_output$lambda_vec,  ylab = 'lamda adaptive',
+    plot.ts(mcmc_output$lambda_vec[burn_in:mcmc_vec_size],  ylab = 'lamda adaptive',
             main = 'Lamda adaptive',
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   }

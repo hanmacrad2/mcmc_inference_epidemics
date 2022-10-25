@@ -41,7 +41,9 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
                                                  mod_start_points = c(1.2, 0.16),
                                                  dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                                  thinning_factor = 10),
-                              FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
+                              priors_list = list(k_prior = c(0.1, 0)),
+                              FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE, PRIOR_K1 = FALSE,
+                                                PRIOR_K2 = TRUE)) {    
   
   #NOTE:
   #i - 1 = n (Simon's paper); #NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
@@ -100,7 +102,14 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
       #LOG LIKELIHOOD
       logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
       #ACCEPTANCE RATIO
-      log_accept_ratio = logl_new - log_like - nu_params_dash[2] + nu_params[2] #exp(1) prior on k #PRIORS
+      log_accept_ratio = logl_new - log_like
+      
+      #PRIOR
+      if (FLAGS_LIST$PRIOR_K1){
+        logl_new - log_like - nu_params_dash[2] + nu_params[2]  #exp(1) prior on k 
+      } else if (FLAGS_LIST$PRIOR_K2){
+        logl_new - log_like - priors_list$k_prior[1]*nu_params_dash[2] + priors_list$k_prior[1]* nu_params[2] 
+      }
       
       #METROPOLIS ACCEPTANCE STEP
       if(!(is.na(log_accept_ratio)) && log(runif(1)) < log_accept_ratio) {

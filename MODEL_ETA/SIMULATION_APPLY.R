@@ -11,11 +11,10 @@ SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
   
   #INTIALISE VECTORS
   x = vector('numeric', num_days); x[1] = 2
+  eta_vec = vector('numeric', num_days); 
   
   #INFECTIOUSNESS (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
   prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
-  
-  eta_vec = vector('numeric', num_days); 
   
   #DAYS OF THE EPIDEMIC
   for (t in 2:num_days) {
@@ -25,7 +24,7 @@ SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
     #INFECTIVITY
     infectivity = rev(prob_infect[1:t]) 
     #POISSON; OFFSPRINT DISTRIBUTION
-    total_rate = sum(eta_vec*infectivity)
+    total_rate = sum(eta_vec*infectivity) #DOT PRODUCT
     x[t] = rpois(1, total_rate)
     
   }
@@ -51,13 +50,13 @@ loglike1
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmcI = MCMC_ADAPTIVE_ETA(dataI, OUTER_FOLDER, seedX)
+mcmcIB = MCMC_ADAPTIVE_ETA(dataI, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmcI$time_elap = time_elap
+mcmcIB$time_elap = time_elap
 
 #PLOT
-dfI = PLOT_MCMC_ETA_GRID(dataI, mcmcI, seedX, simX1$eta_vec, loglike1)
+dfIB = PLOT_MCMC_ETA_GRID(dataI, mcmcIB, seedX, simX1$eta_vec, loglike1)
 
 #****************
 #*DATA II
