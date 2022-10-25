@@ -50,14 +50,14 @@ library(coda)
 
 
 PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, log_like_sim,
-                              mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100, #000,
-                                                mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
-                                                burn_in_pc = 0.05, thinning_factor = 1, #0,
-                                                eta_time_point = 40), #28
-                              FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
-                                                ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
-                              #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
-                              #                   c_prior_ga = c(10, 1), c_prior_exp = c(0.1,0)){
+                               mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100000,
+                                                 mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
+                                                 burn_in_pc = 0.05, thinning_factor = 10, #0,
+                                                 eta_time_point = 40), #28
+                               FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
+                                                 ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
+  #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
+  #                   c_prior_ga = c(10, 1), c_prior_exp = c(0.1,0)){
   
   #PLOT
   plot.new()
@@ -102,11 +102,12 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   }
   
   #LIMITS
-  m1_lim =  max(mcmc_specs$mod_start_points$m1, max(m1_mcmc, na.rm = TRUE))
-  m2_lim = max(mcmc_specs$mod_start_points$m2, max(m2_mcmc, na.rm = TRUE))
-  m3_lim = max(eta_sim_val, max(m3_mcmc, na.rm = TRUE))
-  minll = min(min(log_like_sim,na.rm = TRUE), log_like_sim); maxll = max(max(log_like_sim,  na.rm = TRUE), log_like_sim)
-  m4_lim = c(minll, maxll)
+  m1_min =  max(mcmc_specs$mod_start_points$m1, max(m1_mcmc, na.rm = TRUE)); m1_max =  min(mcmc_specs$mod_start_points$m1, min(m1_mcmc, na.rm = TRUE)) 
+  m2_min = min(mcmc_specs$mod_start_points$m2, min(m2_mcmc, na.rm = TRUE)); m2_max = max(mcmc_specs$mod_start_points$m2, max(m2_mcmc, na.rm = TRUE))
+  m3_min = min(eta_sim_val, min(m3_mcmc, na.rm = TRUE)); m3_max = max(eta_sim_val, max(m3_mcmc, na.rm = TRUE))
+  minll = min(min(log_like_mcmc, na.rm = TRUE), log_like_sim); maxll = max(max(log_like_mcmc,  na.rm = TRUE), log_like_sim)
+  #LIMITS
+  m1_lim = c(m1_min, m1_max);  m2_lim = c(m2_min, m2_max);  m3_lim = c(m3_min, m3_max); m4_lim = c(minll, maxll)
   title_eta = paste(mcmc_specs$mod_par_names[3], "MCMC.", " Day: ", mcmc_specs$eta_time_point)
   
   #PRIORS
@@ -132,13 +133,12 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #************************
   #ROW 1: MCMC TRACE PLOTS
   #************************
-  
-  #****
+
   #alpha
   if (!FLAGS_LIST$ADAPTIVE){
-    plot.ts(m1_mcmc, ylab = mcmc_specs$mod_par_names[1], ylim=c(0, m1_lim),
+    plot.ts(m1_mcmc, ylab = mcmc_specs$mod_par_names[1], ylim= m1_lim,
             main = paste0(mcmc_specs$mod_par_names[1], " N MCMC:", n_mcmc,
-                         ", Simulated: ", mcmc_specs$mod_start_points$m1),
+                          ", Simulated: ", mcmc_specs$mod_start_points$m1),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     abline(h = mcmc_specs$mod_start_points$m1, col = 'red', lwd = 2) #True = green
   } else {
@@ -153,7 +153,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #***************
   #k
   if (!FLAGS_LIST$ADAPTIVE){
-    plot.ts(m2_mcmc, ylab = mcmc_specs$mod_par_names[3], #ylim=c(0, max(m2_mcmc)),
+    plot.ts(m2_mcmc, ylab = mcmc_specs$mod_par_names[3], ylim= m2_lim,
             main = paste(mcmc_specs$mod_par_names[2], "MCMC",
                          "Simulated: ", mcmc_specs$mod_start_points$m2),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
@@ -169,7 +169,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #***************
   #ETA
   if (!FLAGS_LIST$ADAPTIVE){
-    plot.ts(m3_mcmc,  ylab = mcmc_specs$mod_par_names[3], ylim=c(0, m3_lim),
+    plot.ts(m3_mcmc,  ylab = mcmc_specs$mod_par_names[3], ylim = m3_lim,
             main = title_eta,
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     abline(h = eta_sim_val, col = 'green', lwd = 2)
@@ -180,7 +180,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     lines(mcmc_output$sigma$sigma3_vec, col = 'green')
   }
- 
+  
   #***************
   #LOG LIKELIHOOD
   plot.ts(log_like_mcmc, ylab = "log likelihood", ylim= m4_lim,
@@ -197,7 +197,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   hist(m1_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[1], #ylab = 'Density',
        main = paste(mcmc_specs$mod_par_names[1]), #  " prior:", m1_prior),
-       xlim=c(0, m1_lim),
+       xlim = m1_lim,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(v = mcmc_specs$mod_start_points$m1, col = 'red', lwd = 2)
   
@@ -215,7 +215,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   hist(m2_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[2], #ylab = 'Density',
        main = paste(mcmc_specs$mod_par_names[2]), # " prior:", m2_prior),
-       xlim=c(0, m2_lim),
+       xlim= m2_lim,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(v = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2)
   
@@ -234,11 +234,11 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #Hist M3 (ETA)
   hist(m3_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[3], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[3]), xlim=c(0, m3_lim),
-                    cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+       main = paste(mcmc_specs$mod_par_names[3]), xlim = m3_lim,
+       cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   #                   " prior:", m3_prior),
   abline(v = eta_sim_val, col = 'green', lwd = 2)
-
+  
   #***********
   #HIST LOG_LIKE_VEC
   hist(log_like_mcmc, freq = FALSE, breaks = 100, xlim= m4_lim,
@@ -254,7 +254,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #m1 mean
   m1_mean = cumsum(m1_mcmc)/seq_along(m1_mcmc)
   plot(seq_along(m1_mean), m1_mean,
-       ylim=c(0, m1_lim),
+       ylim= m1_lim,
        xlab = 'Time', ylab =  mcmc_specs$mod_par_names[1],
        main = paste(mcmc_specs$mod_par_names[1], "MCMC mean, Simulated:", mcmc_specs$mod_start_points$m1),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
@@ -263,7 +263,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #m2 mean
   m2_mean = cumsum(m2_mcmc)/seq_along(m2_mcmc)
   plot(seq_along(m2_mean), m2_mean,
-       ylim=c(0, m2_lim),
+       ylim= m2_lim,
        xlab = 'Time', ylab = mcmc_specs$mod_par_names[2],
        main = paste(mcmc_specs$mod_par_names[2], "MCMC mean, Simulated:", mcmc_specs$mod_start_points$m2),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
@@ -273,7 +273,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #m3 Mean
   m3_mean = cumsum(m3_mcmc)/seq_along(m3_mcmc)
   plot(seq_along(m3_mean), m3_mean,
-       ylim=c(0, m3_lim),
+       ylim= m3_lim,
        xlab = 'Time', ylab = mcmc_specs$mod_par_names[3],
        main = paste0('Mean ', title_eta), 
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
@@ -289,7 +289,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
        lwd = 1)
   abline(h = log_like_sim, col = 'orange', lwd = 2)
   
-
+  
   #*****************
   #ROW 5: DATA INFECTIONS + JOINT DISTRIBUTIONS/MARGINALS
   #********************
@@ -333,8 +333,8 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #********************
   #v. DATAFRAME: RESULTS
   #********************
- 
-   df_results <- data.frame(
+  
+  df_results <- data.frame(
     rep = seed_count,
     n_mcmc = n_mcmc,
     mcmc_vec_size = mcmc_vec_size,
@@ -342,9 +342,9 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
     alpha_mean_mcmc = round(mean(m1_mcmc), 2), #round(mean(m1_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2),
     k_sim = mcmc_specs$mod_start_points$m2[[1]], 
     k_mean_mcmc = round(mean(m2_mcmc), 2),
-    eta_sim = eta_sim_val, 
+    eta_sim = round(eta_sim_val, 2),
     eta_mean_mcmc = round(mean(m3_mcmc, na.rm = TRUE), 2),
-    log_like_sim = log_like_sim,
+    log_like_sim = round(log_like_sim, 2),
     accept_rate = round(mcmc_output$accept_rate, 2),
     a_rte_d_aug = round(mcmc_output$accept_rate_da, 2),
     #alpha_es = round(effectiveSize(as.mcmc(m1_mcmc))[[1]], 2),

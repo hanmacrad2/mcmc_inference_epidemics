@@ -455,14 +455,23 @@ PLOT_NU_MCMC_GRID(canadaX, mcmc_nu2)
 #SET SEED + RETURN ETA!!
 
 #DATA
-seedX = 1; 
+seedX = 1
+set.seed(seedX); print(paste0('seed = ', seedX))
 seedX = seedX + 1
-print(paste0('seed = ', seedX))
-set.seed(4) #(seedX)
 
-#SEED
+#DATA I
+seedX = 4
+set.seed(seedX) #(seedX)
+simX = SIMULATE_NU()
+dataI = simX$epidemic_data
+plot.ts(dataI) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+#LIKELIHOOD
+loglike = LOG_LIKELIHOOD_NU(dataI, c(1.2,0.16), simX$eta_vec)
+loglike
+
+#DATA II
 seedX = 7
-set.seed(7)
+set.seed(seedX)
 simX = SIMULATE_NU()
 dataII = simX$epidemic_data
 plot.ts(dataII) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
@@ -471,16 +480,15 @@ loglike = LOG_LIKELIHOOD_NU(dataII, c(1.2,0.16), simX$eta_vec)
 loglike
 
 #START MCMC
-seedX = 7
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc_nuX = MCMC_ADAPTIVE_MODEL_NU(dataII, OUTER_FOLDER, seedX)
+mcmcII = MCMC_ADAPTIVE_ETA(dataII, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc_nuX$time_elap = time_elap
+mcmcII$time_elap = time_elap
 
 #PLOT (*FIX PLOT FOR SIMULATION)
-dfII = PLOT_NU_MCMC_GRID(dataII, mcmc_nuX, seedX, simX$eta_vec, loglike)
+dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX$eta_vec, loglike)
 
 
 sigma_etaX = mcmc_nuX$sigma_eta_matrix

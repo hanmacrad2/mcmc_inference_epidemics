@@ -1,13 +1,50 @@
-#NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
+#********************************************************
+#1. INDIVIDUAL R0 MCMC ADAPTIVE SHAPING                           
+#********************************************************
+library(MASS)
+
+#**********************************************
+#LOG LIKELIHOOD
+#**********************************************
+LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. eta[1] = infectivity of xt[1]
+  
+  #Params
+  num_days = length(x)
+  shape_gamma = 6; scale_gamma = 1
+  alpha = nu_params[1]; k = nu_params[2]
+  count_inf = 0
+  
+  #Infectiousness (Discrete gamma)
+  prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - 
+    pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
+  loglike = 0
+  
+  for (t in 2:num_days) {
+    
+    #INFECTIVITY
+    infectivity = rev(prob_infect[1:t-1]) #Current infectivity dependent on people already infected #rev(prob_infect[1:(t-1)]) 
+    total_rate = sum(eta[1:(t-1)]*infectivity) 
+    
+    eta_prob = dgamma(eta[t-1], shape = x[t-1]*k, scale = alpha/k, log = TRUE) #Infite if x[t] = 0
+    if (!is.infinite(eta_prob)) loglike = loglike + eta_prob 
+    loglike = loglike + x[t]*log(total_rate) - total_rate - lfactorial(x[t]) 
+  }
+  
+  return(loglike)
+}
+
+#********************************************************
+#1. INDIVIDUAL R0 MCMC ADAPTIVE SHAPING                           
+#********************************************************
 MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
-                                   mcmc_inputs = list(n_mcmc = 100, #000,
-                                                      mod_start_points = c(1.2, 0.16),
-                                                      dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
-                                                      thinning_factor = 1),
-                                   FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
+                              mcmc_inputs = list(n_mcmc = 100000,
+                                                 mod_start_points = c(1.2, 0.16),
+                                                 dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
+                                                 thinning_factor = 10),
+                              FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE)) {    
   
   #NOTE:
-  #i - 1 = n (Simon's paper)
+  #i - 1 = n (Simon's paper); #NOTE NO REFLECTION, NO TRANSFORMS, MORE INTELLIGENT ADAPTATION
   #**********************************************
   #INITIALISE PARAMS
   #**********************************************
@@ -59,29 +96,29 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
     
     #POSTIVE ONLY
     if (min(nu_params_dash - vec_min) >= 0){ 
-    
-    #LOG LIKELIHOOD
-    logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
-    #ACCEPTANCE RATIO
-    log_accept_ratio = logl_new - log_like - nu_params_dash[2] + nu_params[2] #exp(1) prior on k #PRIORS
-    
-    #METROPOLIS ACCEPTANCE STEP
-    if(!(is.na(log_accept_ratio)) && log(runif(1)) < log_accept_ratio) {
-      nu_params <- nu_params_dash
-      count_accept = count_accept + 1
-      log_like = logl_new
-    }
-    
-    #SIGMA - ADAPTIVE SHAPING
-    xbar_prev = x_bar
-    x_bar = (i-1)/i*xbar_prev + (1/i)*nu_params
-    sigma_i = (1/(i + termX + 1))*( (i + termX)*sigma_i +tcrossprod(nu_params)
-                                    + (i-1)*tcrossprod(xbar_prev)
-                                    -i*tcrossprod(x_bar))
-    
-    #ACCEPTANCE PROB - LAMBDA ADAPTIVE SCALING
-    accept_prob = min(1, exp(log_accept_ratio))
-    
+      
+      #LOG LIKELIHOOD
+      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
+      #ACCEPTANCE RATIO
+      log_accept_ratio = logl_new - log_like - nu_params_dash[2] + nu_params[2] #exp(1) prior on k #PRIORS
+      
+      #METROPOLIS ACCEPTANCE STEP
+      if(!(is.na(log_accept_ratio)) && log(runif(1)) < log_accept_ratio) {
+        nu_params <- nu_params_dash
+        count_accept = count_accept + 1
+        log_like = logl_new
+      }
+      
+      #SIGMA - ADAPTIVE SHAPING
+      xbar_prev = x_bar
+      x_bar = (i-1)/i*xbar_prev + (1/i)*nu_params
+      sigma_i = (1/(i + termX + 1))*( (i + termX)*sigma_i +tcrossprod(nu_params)
+                                      + (i-1)*tcrossprod(xbar_prev)
+                                      -i*tcrossprod(x_bar))
+      
+      #ACCEPTANCE PROB - LAMBDA ADAPTIVE SCALING
+      accept_prob = min(1, exp(log_accept_ratio))
+      
     } else {
       
       accept_prob = 0
