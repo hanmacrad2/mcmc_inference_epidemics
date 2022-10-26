@@ -38,7 +38,7 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
 #********************************************************
 MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
                               mcmc_inputs = list(n_mcmc = 100000,
-                                                 mod_start_points = c(1.2, 0.16),
+                                                 mod_start_points = c(0.55, 0.2),
                                                  dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                                  thinning_factor = 10),
                               priors_list = list(k_prior = c(0.1, 0)),

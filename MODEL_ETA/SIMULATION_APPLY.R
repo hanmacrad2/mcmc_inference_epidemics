@@ -58,6 +58,10 @@ mcmcIB$time_elap = time_elap
 #PLOT
 dfIB = PLOT_MCMC_ETA_GRID(dataI, mcmcIB, seedX, simX1$eta_vec, loglike1)
 
+#BAYES FACTOR
+bf1 = get_bayes_factor(mcmcI$log_like_vec, mcmcIB$log_like_vec)
+bf1
+
 #****************
 #*DATA II
 #****************
@@ -74,12 +78,13 @@ loglike2
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmcII = MCMC_ADAPTIVE_ETA(dataII, OUTER_FOLDER, seedX)
+mcmcIIB = MCMC_ADAPTIVE_ETA(dataII, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmcII$time_elap = time_elap
+mcmcIIB$time_elap = time_elap
 
 #PLOT 
-dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX2$eta_vec, loglike2)
+dfIIB = PLOT_MCMC_ETA_GRID(dataII, mcmcIIB, seedX, simX2$eta_vec, loglike2)
 
+#
 
