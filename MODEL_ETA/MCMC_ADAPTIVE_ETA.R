@@ -25,11 +25,18 @@ LOG_LIKELIHOOD_ETA <- function(x, nu_params, eta){ #eta - a vector of length x. 
     infectivity = rev(prob_infect[1:t-1]) #Current infectivity dependent on people already infected #rev(prob_infect[1:(t-1)]) 
     total_rate = sum(eta[1:(t-1)]*infectivity) 
     
-    eta_prob = dgamma(eta[t-1], shape = x[t-1]*k, scale = alpha/k, log = TRUE) #Infite if x[t] = 0
-    if (!is.infinite(eta_prob) & !is.na(eta_prob)) loglike = loglike + eta_prob 
+    if(x[t-1]==0){ #No infections 
+        if(eta[t-1] == 0) eta_prob = 0 #Don't change likelihood
+        else eta_prob = -Inf #Make whole likelihood zero 
+    } else { #If there IS infections
+      eta_prob = dgamma(eta[t-1], shape = x[t-1]*k, scale = alpha/k, log = TRUE)
+    }
+    
+    loglike = loglike + eta_prob 
+    
     poi_prob = x[t]*log(total_rate) - total_rate - lfactorial(x[t]) 
-    if (!is.infinite(poi_prob) & !is.na(poi_prob)) loglike = loglike + poi_prob
-    #print(paste0(eta_prob,' , ', poi_prob))
+    
+    if (!is.na(poi_prob)) loglike = loglike + poi_prob #Note want to include -Inf so don't filter infinite values
 
   }
   
@@ -44,7 +51,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
                                                  mod_start_points = c(1.2, 0.16),
                                                  dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                                  thinning_factor = 10),
-                              priors_list = list(k_prior = c(0.1, 0)),
+                              priors_list = list(k_prior = c(1, 0)),
                               FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE, PRIOR_K1 = TRUE,
                                                 PRIOR_K2 = FALSE)) {    
   
@@ -142,7 +149,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
     #************************************
     #DATA AUGMENTATION
     #************************************
-    for(t in 1:num_days){
+    for(t in which(dataX[1:(num_days-1)] > 0)){ #Only update eta's where x[t] > 0
       
       v = rep(0, length(eta)); v[t] = 1
       
@@ -192,3 +199,10 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
               log_like_vec = log_like_vec, lambda_vec = lambda_vec, 
               accept_rate = accept_rate, accept_rate_da = accept_rate_da))
 } 
+
+# #Code
+# cc = c(0,1,0,3,0,0,4)
+# 
+# for(t in which(cc[1:(length(cc)-1)] > 0)){
+#   print(cc[t])
+# }

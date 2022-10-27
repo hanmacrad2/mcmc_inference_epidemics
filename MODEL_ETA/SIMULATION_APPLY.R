@@ -75,20 +75,12 @@ plot.ts(dataII) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
 loglike2 = LOG_LIKELIHOOD_NU(dataII, c(1.2,0.16), simX2$eta_vec)
 loglike2
 
-#START MCMC
-start_time = Sys.time()
-print(paste0('start_time:', start_time))
-mcmcIIB = MCMC_ADAPTIVE_ETA(dataII, OUTER_FOLDER, seedX)
-end_time = Sys.time()
-time_elap = get_time(start_time, end_time)
-mcmcIIB$time_elap = time_elap
 
-#PLOT 
-dfIIB = PLOT_MCMC_ETA_GRID(dataII, mcmcIIB, seedX, simX2$eta_vec, loglike2)
+
 
 #BAYES FACTOR (Different start points)
-bf2 = get_bayes_factor(mcmcII$log_like_vec, mcmcIIB$log_like_vec)
-bf2
+#bf2 = get_bayes_factor(mcmcII$log_like_vec, mcmcIIB$log_like_vec)
+#bf2
 
 #**********************************
 #* DATA SIMULATIONS
