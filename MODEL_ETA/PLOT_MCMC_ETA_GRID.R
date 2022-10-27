@@ -51,10 +51,11 @@ library(coda)
 
 PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, log_like_sim,
                                mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100000,
-                                                 mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
+                                                 simulated = list(m1 = 1.2, m2 = 0.16),
+                                                 mod_start_points = list(m1 = 0.55, m2 = 0.2), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10, #0,
-                                                 eta_time_point = 40), #28
-                               priors_list = list(k_prior = c(1,0)),
+                                                 eta_time_point = 20), #28
+                               priors_list = list(k_prior = c(0.1,0)),
                                FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
                                                  ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
   #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
@@ -102,7 +103,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   }
   
   #LIMITS
-  m1_min =  max(mcmc_specs$mod_start_points$m1, max(m1_mcmc, na.rm = TRUE)); m1_max =  min(mcmc_specs$mod_start_points$m1, min(m1_mcmc, na.rm = TRUE)) 
+  m1_min =  min(mcmc_specs$mod_start_points$m1, min(m1_mcmc, na.rm = TRUE));  m1_max =  max(mcmc_specs$mod_start_points$m1, max(m1_mcmc, na.rm = TRUE))
   m2_min = min(mcmc_specs$mod_start_points$m2, min(m2_mcmc, na.rm = TRUE)); m2_max = max(mcmc_specs$mod_start_points$m2, max(m2_mcmc, na.rm = TRUE))
   m3_min = min(eta_sim_val, min(m3_mcmc, na.rm = TRUE)); m3_max = max(eta_sim_val, max(m3_mcmc, na.rm = TRUE))
   minll = min(min(log_like_mcmc, na.rm = TRUE), log_like_sim); maxll = max(max(log_like_mcmc,  na.rm = TRUE), log_like_sim)
@@ -139,14 +140,14 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   if (!FLAGS_LIST$ADAPTIVE){
     plot.ts(m1_mcmc, ylab = mcmc_specs$mod_par_names[1], ylim= m1_lim,
             main = paste0(mcmc_specs$mod_par_names[1], " N MCMC:", n_mcmc,
-                          ", Simulated: ", mcmc_specs$mod_start_points$m1),
+                          ", Simulated: ", mcmc_specs$simulated$m1),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     abline(h = mcmc_specs$mod_start_points$m1, col = 'red', lwd = 2) #True = green
   } else {
     sig1 = mcmc_output$sigma$sigma1_vec
     plot.ts(m1_mcmc, ylab = paste0(mcmc_specs$mod_par_names[1], ",sigma"), #ylim=c(min(min(sig1),min(m1_mcmc)), max(m1_mcmc)),
             main = paste(mcmc_specs$mod_par_names[1], "MCMC",
-                         "Start: ", mcmc_specs$mod_start_points$m1, ', Sigma (red)'),
+                         "Start: ", mcmc_specs$simulated$m1, ', Sigma (red)'),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     lines(mcmc_output$sigma$sigma1_vec, col = 'red')
   }
@@ -156,13 +157,13 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   if (!FLAGS_LIST$ADAPTIVE){
     plot.ts(m2_mcmc, ylab = mcmc_specs$mod_par_names[3], ylim= m2_lim,
             main = paste(mcmc_specs$mod_par_names[2], "MCMC",
-                         "Simulated: ", mcmc_specs$mod_start_points$m2),
+                         "Simulated: ", mcmc_specs$simulated$m2),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     abline(h = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2) #True = green
   } else {
     plot.ts(m2_mcmc, ylab = paste0(mcmc_specs$mod_par_names[2], ",sigma"), #ylim=c(0, m2_lim),
             main = paste(mcmc_specs$mod_par_names[2], "MCMC",
-                         "Start: ", mcmc_specs$mod_start_points$m2, ', Sigma (blue)'),
+                         "Start: ", mcmc_specs$simulated$m2, ', Sigma (blue)'),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     lines(mcmc_output$sigma$sigma2_vec, col = 'blue')
   }
@@ -262,7 +263,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   plot(seq_along(m1_mean), m1_mean,
        ylim= m1_lim,
        xlab = 'Time', ylab =  mcmc_specs$mod_par_names[1],
-       main = paste(mcmc_specs$mod_par_names[1], "MCMC mean, Simulated:", mcmc_specs$mod_start_points$m1),
+       main = paste(mcmc_specs$mod_par_names[1], "MCMC mean, Start:", mcmc_specs$mod_start_points$m1),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(h = mcmc_specs$mod_start_points$m1, col = 'red', lwd = 2)
   
@@ -271,7 +272,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   plot(seq_along(m2_mean), m2_mean,
        ylim= m2_lim,
        xlab = 'Time', ylab = mcmc_specs$mod_par_names[2],
-       main = paste(mcmc_specs$mod_par_names[2], "MCMC mean, Simulated:", mcmc_specs$mod_start_points$m2),
+       main = paste(mcmc_specs$mod_par_names[2], "MCMC mean, Start:", mcmc_specs$mod_start_points$m2),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
        lwd = 1)
   abline(h = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2)
@@ -344,9 +345,11 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
     rep = seed_count,
     n_mcmc = n_mcmc,
     mcmc_vec_size = mcmc_vec_size,
-    alpha_sim = mcmc_specs$mod_start_points$m1[[1]],
+    alpha_sim = mcmc_specs$simulated$m1[[1]],
+    alpha_start = mcmc_specs$mod_start_points$m1[[1]],
     alpha_mean_mcmc = round(mean(m1_mcmc), 2), #round(mean(m1_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2),
-    k_sim = mcmc_specs$mod_start_points$m2[[1]], 
+    k_sim = mcmc_specs$simulated$m2[[1]], 
+    k_start =  mcmc_specs$mod_start_points$m2[[1]],
     k_mean_mcmc = round(mean(m2_mcmc), 2),
     eta_sim = round(eta_sim_val, 2),
     eta_mean_mcmc = round(mean(m3_mcmc, na.rm = TRUE), 2),

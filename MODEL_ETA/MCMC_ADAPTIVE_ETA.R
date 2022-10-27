@@ -6,7 +6,7 @@ library(MASS)
 #**********************************************
 #LOG LIKELIHOOD
 #**********************************************
-LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. eta[1] = infectivity of xt[1]
+LOG_LIKELIHOOD_ETA <- function(x, nu_params, eta){ #eta - a vector of length x. eta[1] = infectivity of xt[1]
   
   #Params
   num_days = length(x)
@@ -26,8 +26,11 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
     total_rate = sum(eta[1:(t-1)]*infectivity) 
     
     eta_prob = dgamma(eta[t-1], shape = x[t-1]*k, scale = alpha/k, log = TRUE) #Infite if x[t] = 0
-    if (!is.infinite(eta_prob)) loglike = loglike + eta_prob 
-    loglike = loglike + x[t]*log(total_rate) - total_rate - lfactorial(x[t]) 
+    if (!is.infinite(eta_prob) & !is.na(eta_prob)) loglike = loglike + eta_prob 
+    poi_prob = x[t]*log(total_rate) - total_rate - lfactorial(x[t]) 
+    if (!is.infinite(poi_prob) & !is.na(poi_prob)) loglike = loglike + poi_prob
+    #print(paste0(eta_prob,' , ', poi_prob))
+
   }
   
   return(loglike)
@@ -38,7 +41,7 @@ LOG_LIKELIHOOD_NU <- function(x, nu_params, eta){ #eta - a vector of length x. e
 #********************************************************
 MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
                               mcmc_inputs = list(n_mcmc = 100000,
-                                                 mod_start_points = c(0.55, 0.2),
+                                                 mod_start_points = c(1.2, 0.16),
                                                  dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                                  thinning_factor = 10),
                               priors_list = list(k_prior = c(0.1, 0)),
@@ -70,7 +73,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
   nu_params_matrix[1,] <- mcmc_inputs$mod_start_points; nu_params = nu_params_matrix[1,] #2x1 #as.matrix
   #LOG LIKELIHOOD
   log_like_vec <- vector('numeric', mcmc_vec_size)
-  log_like_vec[1] <- LOG_LIKELIHOOD_NU(dataX, nu_params, eta);  log_like = log_like_vec[1]
+  log_like_vec[1] <- LOG_LIKELIHOOD_ETA(dataX, nu_params, eta);  log_like = log_like_vec[1]
   
   #ADAPTIVE SHAPING PARAMS + VECTORS
   lambda_vec <- vector('numeric', mcmc_vec_size); lambda_vec[1] <- 1
@@ -100,7 +103,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
     if (min(nu_params_dash - vec_min) >= 0){ 
       
       #LOG LIKELIHOOD
-      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params_dash, eta)
+      logl_new = LOG_LIKELIHOOD_ETA(dataX, nu_params_dash, eta)
       #ACCEPTANCE RATIO
       log_accept_ratio = logl_new - log_like
       
@@ -147,7 +150,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
       eta_dash = abs(eta + rnorm(1,0,sigma_eta[t])*v) #normalise the t_th element of eta #or variance = x[t]
       
       #LOG LIKELIHOOD
-      logl_new = LOG_LIKELIHOOD_NU(dataX, nu_params, eta_dash)
+      logl_new = LOG_LIKELIHOOD_ETA(dataX, nu_params, eta_dash)
       log_accept_ratio = logl_new - log_like
       
       #METROPOLIS ACCEPTANCE STEP

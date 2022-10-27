@@ -86,5 +86,45 @@ mcmcIIB$time_elap = time_elap
 #PLOT 
 dfIIB = PLOT_MCMC_ETA_GRID(dataII, mcmcIIB, seedX, simX2$eta_vec, loglike2)
 
-#
+#BAYES FACTOR (Different start points)
+bf2 = get_bayes_factor(mcmcII$log_like_vec, mcmcIIB$log_like_vec)
+bf2
 
+#**********************************
+#* DATA SIMULATIONS
+#***********************************
+
+seedX = 8; #seed 18, 23, 32 interesting
+seedX = seedX + 1
+set.seed(seedX)
+simXXX = SIMULATE_NU()
+dataXX = simXXX$epidemic_data
+plot.ts(dataXX)
+
+#****************
+#*DATA III
+#****************
+seedX = 32
+set.seed(seedX)
+simX3 = SIMULATE_NU()
+dataIII = simX3$epidemic_data
+plot.ts(dataIII) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+
+#LIKELIHOOD
+loglike3 = LOG_LIKELIHOOD_ETA(dataIII, c(1.2,0.16), simX3$eta_vec)
+loglike3
+
+#START MCMC
+start_time = Sys.time()
+print(paste0('start_time:', start_time))
+mcmcIII = MCMC_ADAPTIVE_ETA(dataIII, OUTER_FOLDER, seedX)
+end_time = Sys.time()
+time_elap = get_time(start_time, end_time)
+mcmcIII$time_elap = time_elap
+
+#PLOT 
+dfIII = PLOT_MCMC_ETA_GRID(dataIII, mcmcIII, seedX, simX3$eta_vec, loglike3)
+
+#BAYES FACTOR (Different start points)
+#bf2 = get_bayes_factor(mcmcII$log_like_vec, mcmcIIB$log_like_vec)
+#bf2
