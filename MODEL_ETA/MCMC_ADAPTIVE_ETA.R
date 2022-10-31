@@ -37,7 +37,6 @@ LOG_LIKELIHOOD_ETA <- function(x, nu_params, eta){ #eta - a vector of length x. 
     poi_prob = x[t]*log(total_rate) - total_rate - lfactorial(x[t]) 
     
     if (!is.na(poi_prob)) loglike = loglike + poi_prob #Note want to include -Inf so don't filter infinite values
-
   }
   
   return(loglike)
@@ -199,10 +198,3 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
               log_like_vec = log_like_vec, lambda_vec = lambda_vec, 
               accept_rate = accept_rate, accept_rate_da = accept_rate_da))
 } 
-
-# #Code
-# cc = c(0,1,0,3,0,0,4)
-# 
-# for(t in which(cc[1:(length(cc)-1)] > 0)){
-#   print(cc[t])
-# }
