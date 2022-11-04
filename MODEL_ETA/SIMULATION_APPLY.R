@@ -2,6 +2,8 @@
 #1. INDIVIDUAL R0 - SIMULATE DATA & SAMPLE USING MCMC                         
 #********************************************************
 source("~/Github/epidemic_modelling/helper_functions.R")
+OUTER_FOLDER = "~/PhD_Warwick/Project_Epidemic_Modelling/Results/model_individual_nu/"
+ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
 
 #SIMULATION FUNCTION
 SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
@@ -61,7 +63,7 @@ dataI = simX1$epidemic_data
 plot.ts(dataI) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
 
 #LIKELIHOOD
-loglike1 = LOG_LIKELIHOOD_NU(dataI, c(1.2,0.16), simX1$eta_vec)
+loglike1 = LOG_LIKELIHOOD_ETA(dataI, c(1.2,0.16), simX1$eta_vec)
 loglike1
 
 #START MCMC
@@ -86,7 +88,8 @@ seedX = 7
 set.seed(seedX)
 simX2 = SIMULATE_NU()
 dataII = simX2$epidemic_data
-plot.ts(dataII) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+plot.ts(dataII, ylab = 'Daily Infection count',
+        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
 
 #LIKELIHOOD
 loglike2 = LOG_LIKELIHOOD_ETA(dataII, c(1.2,0.16), simX2$eta_vec)
