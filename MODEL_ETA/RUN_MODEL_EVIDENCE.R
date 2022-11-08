@@ -147,6 +147,11 @@ plot(vec_lme,  pch = 19,
      ylab = 'Log of Model Evidence',
      main = 'Log of Model Evidence. MCMC 10 runs (100k) - Dataset I')
 
+plot.new()
+par(mfrow = c(1,1))
+plot(vec_lme2,  pch = 19,
+     ylab = 'Log of Model Evidence',
+     main = 'Log of Model Evidence. MCMC 5 runs (100k) - Dataset II')
 
 #**********************
 #* DATASET II
@@ -318,3 +323,7 @@ log_model_evidence88 = LOG_MODEL_EVIDENCE(mcmc88$log_like_vec)
 print(paste0('log_model_evidence =  ', log_model_evidence88))
 vec_lme2[i] = log_model_evidence88
 vec_lme2
+
+plot.new()
+par(mfrow=c(3,1))
+par = mfrow(c(2,1))
