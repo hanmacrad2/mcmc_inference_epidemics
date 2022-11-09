@@ -20,10 +20,10 @@ get_upper_ci <- function(mcmc_output){
 #PLOT CREDIBLE INTERVAL 
 
 #VARIABLES
-vec_alpha = c(0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7)
-num_iters = 10
-vec_means = vector("numeric", length = num_iters)
-vec_lower = vector("numeric", length = num_iters); vec_upper = vector("numeric", length = num_iters)
+vec_k = c(0.1, 0.16, 0.25, 0.5, 1, 1.5, 2, 4, 8, 10, 100)
+num_iters = length(vec_k)
+vec_k_means = vector("numeric", length = num_iters)
+vec_k_lower = vector("numeric", length = num_iters); vec_k_upper = vector("numeric", length = num_iters)
 
 #PLOTS
 plot.new()
@@ -32,221 +32,236 @@ par(mfrow=c(1,1))
 #DATA 1
 seedX = 1
 set.seed(seedX)
-sim11 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-data11 = sim11$epidemic_data
-plot.ts(data11)
+#simX112 = SIMULATE_NU(k = vec_k[seedX])
+#dataX112 = simX112$epidemic_data
+#plot.ts(dataX112)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc111 = MCMC_ADAPTIVE_ETA(data11, OUTER_FOLDER, seedX)
+mcmcX111 = MCMC_ADAPTIVE_ETA(dataX112, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc111$time_elap = time_elap
+mcmcX111$time_elap = time_elap
 
-print(paste0('mean 1', mean(mcmc111$nu_params_matrix[, 1])))
-vec_means[seedX] = mean(mcmc111$nu_params_matrix[, 1])
-vec_lower[seedX] = get_lower_ci(mcmc111) 
-vec_upper[seedX] = get_upper_ci(mcmc111) 
+print(paste0('mean 1', mean(mcmcX111$nu_params_matrix[, 1])))
+vec_k_means[seedX] = mean(mcmcX111$nu_params_matrix[, 1])
+vec_k_lower[seedX] = get_lower_ci(mcmcX111) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX111) 
 
 #*********************
 #DATA 2
 seedX = seedX + 1
-#set.seed(seedX)
-#sim22 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data22 = sim22$epidemic_data
-plot.ts(data22)
+set.seed(seedX)
+# simX22 = SIMULATE_NU(k = vec_k[seedX])
+# dataX22 = simX22$epidemic_data
+# plot.ts(dataX22)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc222 = MCMC_ADAPTIVE_ETA(data22, OUTER_FOLDER, seedX)
+mcmcX222 = MCMC_ADAPTIVE_ETA(dataX22, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc222$time_elap = time_elap
-vec_means[seedX] = mean(mcmc222$nu_params_matrix[, 1])
-vec_lower[seedX] = get_lower_ci(mcmc222) 
-vec_upper[seedX] = get_upper_ci(mcmc222) 
+mcmcX222$time_elap = time_elap
+vec_k_means[seedX] = mean(mcmcX222$nu_params_matrix[, 1])
+vec_k_lower[seedX] = get_lower_ci(mcmcX222) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX222) 
 
 #****************
 #DATA 3
-#seedX = seedX + 1
-seedX = 3
-set.seed(seedX)
-#sim33 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data33 = sim33$epidemic_data
-#plot.ts(data33)
-
-#START MCMC
-start_time = Sys.time()
-print(paste0('start_time:', start_time))
-mcmc333 = MCMC_ADAPTIVE_ETA(data33, OUTER_FOLDER, seedX)
-end_time = Sys.time()
-time_elap = get_time(start_time, end_time)
-mcmc333$time_elap = time_elap
-
-#Results
-vec_means[seedX] = mean(mcmc333$nu_params_matrix[, 1])
-vec_lower[seedX] = get_lower_ci(mcmc333) 
-vec_upper[seedX] = get_upper_ci(mcmc333) 
-
-#*****************************
-#DATA: ALPHA = 1.2
 seedX = seedX + 1
 set.seed(seedX)
-#simX1 = SIMULATE_NU()
-#dataj = simX1$epidemic_data
-#plot.ts(dataj) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
-
-#LIKELIHOOD
-#loglike1 = LOG_LIKELIHOOD_ETA(dataI, c(1.2,0.16), simX1$eta_vec)
-#loglike1
+# simX33 = SIMULATE_NU(k = vec_k[seedX])
+# dataX33 = simX33$epidemic_data
+# plot.ts(dataX33)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc44 = MCMC_ADAPTIVE_ETA(dataI, OUTER_FOLDER, seedX)
+mcmcX333 = MCMC_ADAPTIVE_ETA(dataX33, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc44$time_elap = time_elap
+mcmcX333$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc44$nu_params_matrix[, 1])
-vec_lower[seedX] = get_lower_ci(mcmc44) 
-vec_upper[seedX] = get_upper_ci(mcmc44)
+vec_k_means[seedX] = mean(mcmcX333$nu_params_matrix[, 1])
+vec_k_lower[seedX] = get_lower_ci(mcmcX333) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX333) 
+
+#*****************************
+#DATA: 
+seedX = seedX + 1
+set.seed(seedX)
+# simX44 = SIMULATE_NU(k = vec_k[seedX])
+# dataX44 = simX44$epidemic_data
+# plot.ts(dataX44)
+
+#START MCMC
+start_time = Sys.time()
+print(paste0('start_time:', start_time))
+mcmcX444 = MCMC_ADAPTIVE_ETA(dataX44, OUTER_FOLDER, seedX)
+end_time = Sys.time()
+time_elap = get_time(start_time, end_time)
+mcmcX444$time_elap = time_elap
+
+#Results
+vec_k_means[seedX] = mean(mcmcX444$nu_params_matrix[, 1])
+vec_k_lower[seedX] = get_lower_ci(mcmcX444) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX444)
 
 #****************
 #DATA 5
 seedX = seedX + 1
 set.seed(seedX)
-#sim55 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data55 = sim55$epidemic_data
-#plot.ts(data55)
+# simX55 = SIMULATE_NU(k = vec_k[seedX])
+# dataX55 = simX55$epidemic_data
+# plot.ts(dataX55)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc555 = MCMC_ADAPTIVE_ETA(data55, OUTER_FOLDER, seedX)
+mcmcX555 = MCMC_ADAPTIVE_ETA(dataX55, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc555$time_elap = time_elap
+mcmcX555$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc555$nu_params_matrix[, 1])
-vec_lower[seedX] = get_lower_ci(mcmc555) 
-vec_upper[seedX] = get_upper_ci(mcmc555)
+vec_k_means[seedX] = mean(mcmcX555$nu_params_matrix[, 1])
+vec_k_lower[seedX] = get_lower_ci(mcmcX555) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX555)
 
 #*****************************
 #* DATA 6
 seedX = seedX + 1
 set.seed(seedX)
-#sim66 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data66 = sim66$epidemic_data
-#plot.ts(data66)
+# simX66 = SIMULATE_NU(k = vec_k[seedX])
+# dataX66 = simX66$epidemic_data
+# plot.ts(dataX66)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc666 = MCMC_ADAPTIVE_ETA(data66, OUTER_FOLDER, seedX)
+mcmcX666 = MCMC_ADAPTIVE_ETA(dataX66, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc666$time_elap = time_elap
+mcmcX666$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc666$nu_params_matrix[, 1]) 
-vec_lower[seedX] = get_lower_ci(mcmc666) 
-vec_upper[seedX] = get_upper_ci(mcmc666)
+vec_k_means[seedX] = mean(mcmcX666$nu_params_matrix[, 1]) 
+vec_k_lower[seedX] = get_lower_ci(mcmcX666) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX666)
 
 #*****************************
 #* DATA 7
 seedX = seedX + 1
 set.seed(seedX)
-#sim77 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data77 = sim77$epidemic_data
-#plot.ts(data77)
+# simX77 = SIMULATE_NU(k = vec_k[seedX])
+# dataX77 = simX77$epidemic_data
+# plot.ts(dataX77)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc777 = MCMC_ADAPTIVE_ETA(data77, OUTER_FOLDER, seedX)
+mcmcX777 = MCMC_ADAPTIVE_ETA(dataX77, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc777$time_elap = time_elap
+mcmcX777$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc777$nu_params_matrix[, 1]) 
-vec_lower[seedX] = get_lower_ci(mcmc777) 
-vec_upper[seedX] = get_upper_ci(mcmc777)
+vec_k_means[seedX] = mean(mcmcX777$nu_params_matrix[, 1]) 
+vec_k_lower[seedX] = get_lower_ci(mcmcX777) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX777)
 
 #*****************************
 #* DATA 8
 seedX = seedX + 1
 set.seed(seedX)
-#sim88 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data88 = sim88$epidemic_data
-#plot.ts(data88)
+# simX88 = SIMULATE_NU(k = vec_k[seedX])
+# dataX88 = simX88$epidemic_data
+# plot.ts(dataX88)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc888 = MCMC_ADAPTIVE_ETA(data88, OUTER_FOLDER, seedX)
+mcmcX888 = MCMC_ADAPTIVE_ETA(dataX88, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc888$time_elap = time_elap
+mcmcX888$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc888$nu_params_matrix[, 1]) 
-vec_lower[seedX] = get_lower_ci(mcmc888) 
-vec_upper[seedX] = get_upper_ci(mcmc888)
+vec_k_means[seedX] = mean(mcmcX888$nu_params_matrix[, 1]) 
+vec_k_lower[seedX] = get_lower_ci(mcmcX888) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX888)
 
 #*****************************
 #* DATA 9
 seedX = seedX + 1
 set.seed(seedX)
-#sim99 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data99 = sim99$epidemic_data
-#plot.ts(data99)
+# simX99 = SIMULATE_NU(k = vec_k[seedX])
+# dataX99 = simX99$epidemic_data
+# plot.ts(dataX99)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc999 = MCMC_ADAPTIVE_ETA(data99, OUTER_FOLDER, seedX)
+mcmcX999 = MCMC_ADAPTIVE_ETA(dataX99, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc999$time_elap = time_elap
+mcmcX999$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc999$nu_params_matrix[, 1]) 
-vec_lower[seedX] = get_lower_ci(mcmc999) 
-vec_upper[seedX] = get_upper_ci(mcmc999)
+vec_k_means[seedX] = mean(mcmcX999$nu_params_matrix[, 1]) 
+vec_k_lower[seedX] = get_lower_ci(mcmcX999) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX999)
 
 #*****************************
 #* DATA 10
 seedX = seedX + 1
 set.seed(seedX)
-#sim10 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data10 = sim10$epidemic_data
-#plot.ts(data10)
+# simX10 = SIMULATE_NU(k = vec_k[seedX])
+# dataX10 = simX10$epidemic_data
+# plot.ts(dataX10)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc10 = MCMC_ADAPTIVE_ETA(data10, OUTER_FOLDER, seedX)
+mcmcX10 = MCMC_ADAPTIVE_ETA(dataX10, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
-mcmc10$time_elap = time_elap
+mcmcX10$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc10$nu_params_matrix[, 1]) 
-vec_lower[seedX] = get_lower_ci(mcmc10) 
-vec_upper[seedX] = get_upper_ci(mcmc10)
+vec_k_means[seedX] = mean(mcmcX10$nu_params_matrix[, 1]) 
+vec_k_lower[seedX] = get_lower_ci(mcmcX10) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX10)
+
+#*****************************
+#* DATA 11
+seedX = seedX + 1
+set.seed(seedX)
+# simX11 = SIMULATE_NU(k = vec_k[seedX])
+# dataX11 = simX11$epidemic_data
+# plot.ts(dataX11)
+
+#START MCMC
+start_time = Sys.time()
+print(paste0('start_time:', start_time))
+mcmcX11 = MCMC_ADAPTIVE_ETA(dataX11, OUTER_FOLDER, seedX)
+end_time = Sys.time()
+time_elap = get_time(start_time, end_time)
+mcmcX11$time_elap = time_elap
+
+#Results
+vec_k_means[seedX] = mean(mcmcX11$nu_params_matrix[, 1]) 
+vec_k_lower[seedX] = get_lower_ci(mcmcX11) 
+vec_k_upper[seedX] = get_upper_ci(mcmcX11)
 
 
 #********************************
 #PLOT CREDIBLE INTERVALS
-require(plotrix)
-plotCI(vec_alpha, vec_means, ui= vec_upper, li= vec_lower,
-       xlab = 'alpha', ylab = 'alpha mean', main = 'Alpha MCMC Posterior Mean &
+plotCI(vec_k, vec_k_means, ui= vec_k_upper, li= vec_k_lower,
+       xlab = 'k', ylab = 'k mean', main = 'k MCMC Posterior Mean &
        95 % Credible intervals. N MCMC = 100k',
        xlim = c(min(vec_alpha), max(vec_alpha)), lwd = 2)
-lines(vec_alpha, vec_alpha, col = 'red', lwd = 2)
+lines(vec_k, vec_k, col = 'red', lwd = 2)
