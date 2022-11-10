@@ -52,9 +52,9 @@ vec_upper[seedX] = get_upper_ci(mcmc111)
 #*********************
 #DATA 2
 seedX = seedX + 1
-#set.seed(seedX)
-#sim22 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data22 = sim22$epidemic_data
+set.seed(seedX)
+sim22 = SIMULATE_NU(alphaX = vec_alpha[seedX])
+data22 = sim22$epidemic_data
 plot.ts(data22)
 
 #START MCMC
@@ -223,10 +223,11 @@ vec_upper[seedX] = get_upper_ci(mcmc999)
 #*****************************
 #* DATA 10
 seedX = seedX + 1
+seedX = 10
 set.seed(seedX)
-#sim10 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data10 = sim10$epidemic_data
-#plot.ts(data10)
+sim10 = SIMULATE_NU(alphaX = vec_alpha[seedX])
+data10 = sim10$epidemic_data
+plot.ts(data10)
 
 #START MCMC
 start_time = Sys.time()

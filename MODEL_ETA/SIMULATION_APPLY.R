@@ -2,7 +2,7 @@
 #1. INDIVIDUAL R0 - SIMULATE DATA & SAMPLE USING MCMC                         
 #********************************************************
 source("~/Github/epidemic_modelling/helper_functions.R")
-OUTER_FOLDER = "~/PhD_Warwick/Project_Epidemic_Modelling/Results/model_individual_nu/"
+OUTER_FOLDER = "~/PhD_Warwick/Project_Epidemic_Modelling/Results/model_individual_nu/v1"
 ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
 
 #SIMULATION FUNCTION
@@ -75,25 +75,25 @@ time_elap = get_time(start_time, end_time)
 mcmcI$time_elap = time_elap
 
 #PLOT
-dfI = PLOT_MCMC_ETA_GRID(dataI, mcmcI, seedX, simX1$eta_vec, loglike1)
+#dfI = PLOT_MCMC_ETA_GRID(dataI, mcmcI, seedX, simX1$eta_vec, loglike1)
 
 #BAYES FACTOR
-bf1 = get_bayes_factor(mcmcI$log_like_vec, mcmcIB$log_like_vec)
-bf1
+#bf1 = get_bayes_factor(mcmcI$log_like_vec, mcmcIB$log_like_vec)
+#bf1
 
 #****************
 #*DATA II
 #****************
 seedX = 7
 set.seed(seedX)
-simX2 = SIMULATE_NU()
-dataII = simX2$epidemic_data
-plot.ts(dataII, ylab = 'Daily Infection count',
-        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+#simX2 = SIMULATE_NU()
+#dataII = simX2$epidemic_data
+#plot.ts(dataII, ylab = 'Daily Infection count',
+#        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
 
 #LIKELIHOOD
-loglike2 = LOG_LIKELIHOOD_ETA(dataII, c(1.2,0.16), simX2$eta_vec)
-loglike2
+#loglike2 = LOG_LIKELIHOOD_ETA(dataII, c(1.2,0.16), simX2$eta_vec)
+#loglike2
 
 #START MCMC
 start_time = Sys.time()
@@ -104,7 +104,59 @@ time_elap = get_time(start_time, end_time)
 mcmcII$time_elap = time_elap
 
 #PLOT 
-dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX2$eta_vec, loglike2)
+#dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX2$eta_vec, loglike2)
+
+#****************
+#*DATA III (alpha = 0.9, k = 0.16)
+#****************
+seedX = 3
+set.seed(seedX)
+#simX3 = SIMULATE_NU(alphaX = 0.9)
+#dataIII = simX3$epidemic_data
+#plot.ts(dataIII, ylab = 'Daily Infection count',
+#        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+
+#LIKELIHOOD
+loglike3 = LOG_LIKELIHOOD_ETA(dataIII, c(0.9,0.16), simX3$eta_vec)
+loglike3
+
+#START MCMC
+start_time = Sys.time()
+print(paste0('start_time:', start_time))
+mcmcIII = MCMC_ADAPTIVE_ETA(dataIII, OUTER_FOLDER, seedX)
+end_time = Sys.time()
+time_elap = get_time(start_time, end_time)
+mcmcIII$time_elap = time_elap
+
+#PLOT 
+dfIII = PLOT_MCMC_ETA_GRID(dataIII, mcmcIII, seedX, simX3$eta_vec, loglike3)
+
+
+#****************
+#*DATA IV
+#****************
+seedX = 4
+set.seed(seedX)
+#simX4 = SIMULATE_NU(k = 1.0)
+#dataIV = simX4$epidemic_data
+plot.ts(dataIV, ylab = 'Daily Infection count',
+        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+
+#LIKELIHOOD
+loglike4 = LOG_LIKELIHOOD_ETA(dataIV, c(1.2,1.0), simX4$eta_vec)
+loglike4
+
+#START MCMC
+start_time = Sys.time()
+print(paste0('start_time:', start_time))
+mcmcIV = MCMC_ADAPTIVE_ETA(dataIV, OUTER_FOLDER, seedX)
+end_time = Sys.time()
+time_elap = get_time(start_time, end_time)
+mcmcIV$time_elap = time_elap
+
+#PLOT 
+#dfIV = PLOT_MCMC_ETA_GRID(dataIV, mcmcIV, seedX, simX4$eta_vec, loglike4)
+
 
 #****************
 #*DATA I

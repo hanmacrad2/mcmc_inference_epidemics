@@ -97,7 +97,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
   #DIRECTORY - SAVING
   ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
   
-  #MCMC
+  #MCMC (#RENAME NU_PARAMS AS PARAMS)
   for(i in 2:n_mcmc) {
     
     if(i%%(n_mcmc/100) == 0) print(paste0('i = ', i))
@@ -113,12 +113,18 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
       #ACCEPTANCE RATIO
       log_accept_ratio = logl_new - log_like
       
-      #PRIOR
+      #PRIOR (*Currently improper prior on alpha. Zero weight on alpha being less than 1, infinite weight on alpha being > 1)
+      #Prior on alpha currently 0; log(0); 1
       if (FLAGS_LIST$PRIOR_K1){
-        logl_new - log_like - nu_params_dash[2] + nu_params[2]  #exp(1) prior on k 
+        log_accept_ratio = log_accept_ratio - nu_params_dash[2] + nu_params[2]  #exp(1) prior on k 
       } else if (FLAGS_LIST$PRIOR_K2){
-        logl_new - log_like - priors_list$k_prior[1]*nu_params_dash[2] + priors_list$k_prior[1]* nu_params[2] 
+        log_accept_ratio = log_accept_ratio - priors_list$k_prior[1]*nu_params_dash[2] + priors_list$k_prior[1]* nu_params[2] 
       }
+      
+      #ALPHA PRIOR
+      #SAME AMOUNT OF MASS <1>. 
+      #Gamma with median 1 Gamma(2,1) Mode:1. or exp(1)
+      log_accept_ratio = log_accept_ratio - nu_params_dash[1] + nu_params[1]
       
       #METROPOLIS ACCEPTANCE STEP
       if(!(is.na(log_accept_ratio)) && log(runif(1)) < log_accept_ratio) {
@@ -153,7 +159,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
       v = rep(0, length(eta)); v[t] = 1
       
       #METROPOLIS STEP 
-      eta_dash = abs(eta + rnorm(1,0,sigma_eta[t])*v) #normalise the t_th element of eta #or variance = x[t]
+      eta_dash = abs(eta + rnorm(1,0, sigma_eta[t])*v) #normalise the t_th element of eta #or variance = x[t]
       
       #LOG LIKELIHOOD
       logl_new = LOG_LIKELIHOOD_ETA(dataX, nu_params, eta_dash)
@@ -184,6 +190,7 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
   } #END FOR LOOP
   
   #SAVE
+  saveRDS(dataX, file = paste0(OUTER_FOLDER, 'dataX', seed_count, '.rds' ))
   saveRDS(nu_params_matrix, file = paste0(OUTER_FOLDER, 'nu_params_matrix_', seed_count, '.rds' ))
   saveRDS(eta_matrix, file = paste0(OUTER_FOLDER, 'eta_matrix_', seed_count, '.rds' ))
   saveRDS(log_like_vec, file = paste0(OUTER_FOLDER, 'log_like_vec_', seed_count, '.rds' ))

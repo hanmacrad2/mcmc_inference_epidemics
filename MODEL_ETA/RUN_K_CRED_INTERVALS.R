@@ -175,11 +175,11 @@ vec_k_upper[seedX] = get_upper_ci(mcmcX777)
 
 #*****************************
 #* DATA 8
-seedX = seedX + 1
+seedX = 8 #seedX + 1
 set.seed(seedX)
-# simX88 = SIMULATE_NU(k = vec_k[seedX])
-# dataX88 = simX88$epidemic_data
-# plot.ts(dataX88)
+simX88 = SIMULATE_NU(k = vec_k[seedX])
+dataX88 = simX88$epidemic_data
+plot.ts(dataX88)
 
 #START MCMC
 start_time = Sys.time()
