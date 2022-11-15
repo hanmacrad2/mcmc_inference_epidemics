@@ -48,15 +48,56 @@ library(coda)
 #'
 #' df_mcmc_results = PLOT_SS_MCMC_GRID(epidemic_data, mcmc_output) 
 
+PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
+                     seedX, eta_start = 1,
+                     eta_reps = 17){
+  
+  #PLOT
+  plot.new()
+  par(mfrow=c(4,5))
+  colours <- rainbow(eta_reps + 1); count = 1
+  
+  #PLOT INFECTIONS
+  inf_tite = paste0(" Data. Seed = ", seedX) 
+  plot.ts(epidemic_data, xlab = 'Time', ylab = 'Daily Infections count',
+          main = inf_tite,
+          cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  #PLOT ETA
+  plot.ts(true_eta_vec, xlab = 'Time', ylab = 'Daily Eta',
+          main = "Eta over the course of the Epidemic",
+          cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  
+  for(day in seq(eta_start, eta_start + eta_reps, by = 1)){
+    
+    print(day)
+    eta_dfX = eta_matrix[, day]
+    
+    if (day == eta_start){
+      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
+              main = paste0('Data ', seedX, '. Eta day:', day),
+              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
+    } else {
 
+      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
+              main = paste0('Eta day', day),
+              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
+    }
+    count = count + 1
+  }
+  
+}
+
+#PLOT MCMC GRID
 PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, log_like_sim,
                                mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100000,
-                                                 simulated = list(m1 = 1.2, m2 = 0.16),
+                                                 simulated = list(m1 = 1.2, m2 = 1.0),
                                                  mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10,
                                                  eta_time_point = 80), #28
-                               priors_list = list(k_prior = c(1,0)),
-                               FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = FALSE,
+                               priors_list = list(k_prior = c(1,0), alpha_prior = c(1,0)),
+                               FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = TRUE,
                                                  ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
   #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
   #                   c_prior_ga = c(10, 1), c_prior_exp = c(0.1,0)){
@@ -111,6 +152,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   m1_lim = c(m1_min, m1_max);  m2_lim = c(m2_min, m2_max);  m3_lim = c(m3_min, m3_max); m4_lim = c(minll, maxll)
   print(paste0('m4_lim =', m4_lim))
   title_eta = paste(mcmc_specs$mod_par_names[3], "MCMC.", " Day: ", mcmc_specs$eta_time_point)
+  #Priors
   m2_prior =  paste0('exp(', priors_list$k_prior[1], ')')
   
   #PRIORS
@@ -138,10 +180,10 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #************************
 
   #alpha
+  alpha_title = bquote(bold(alpha ~ "; Mean of" ~ eta ~ "~ Ga(). Simulated: " ~ .(mcmc_specs$simulated$m1)))
   if (!FLAGS_LIST$ADAPTIVE){
-    plot.ts(m1_mcmc, ylab = mcmc_specs$mod_par_names[1], ylim= m1_lim,
-            main = paste0(mcmc_specs$mod_par_names[1], " N MCMC:", n_mcmc,
-                          ", Simulated: ", mcmc_specs$simulated$m1),
+    plot.ts(m1_mcmc, ylab = mcmc_specs$mod_par_names[1], ylim= m1_lim, #bquote("Hello" ~ r[xy] == .(cor) ~ "and" ~ B^2)
+            main = alpha_title,
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     abline(h = mcmc_specs$mod_start_points$m1, col = 'red', lwd = 2) #True = green
   } else {
@@ -187,7 +229,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #***************
   #LOG LIKELIHOOD
   plot.ts(log_like_mcmc, ylab = "log likelihood", ylim= m4_lim,
-          main = paste("Log Likelihood. Burn-in =", burn_in),
+          main = paste("Log Likelihood. N MCMC:", n_mcmc, ". Burn-in:", burn_in),
           cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(h = log_like_sim, col = 'orange', lwd = 2)
   
@@ -197,17 +239,18 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   
   #***********
   #HIST m1
+  alpha_titleII = bquote(bold(alpha ~ "Prior: exp("~.(priors_list$alpha_prior[1])~")"))
   hist(m1_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[1], #ylab = 'Density',
-       main = paste0(mcmc_specs$mod_par_names[1], ' (Mean of Gamma pdf)'), #  " prior:", m1_prior),
+       main = alpha_titleII,
        xlim = m1_lim,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(v = mcmc_specs$mod_start_points$m1, col = 'red', lwd = 2)
   
-  #PRIOR PLOT
+  #PRIOR PLOT 
   if (FLAGS_LIST$PRIOR) {
     xseq = seq(0, 1.5, length.out = 500)
-    lines(xseq, dexp(xseq, priors_list$a_prior_exp[1]),
+    lines(xseq, dexp(xseq, priors_list$alpha_prior[1]),
           type = 'l', lwd = 2, col = 'red')
   } else {
     #m2_prior = paste0('exp(', priors_list$b_prior_ga[1], ')')
@@ -215,17 +258,20 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   
   #***********
   #HIST m2
+  ktitle = bquote(bold(k ~ "Prior: exp("~.(priors_list$k_prior[1])~")"))
   hist(m2_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[2], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[2], ". prior:", m2_prior),
+       main = ktitle,
        xlim= m2_lim,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   abline(v = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2)
   
   #Prior plot
+  if (FLAGS_LIST$PRIOR) {
   xseq = seq(0, 1.5, length.out = 500)
   lines(xseq, dexp(xseq, priors_list$k_prior[1]),
         type = 'l', lwd = 2, col = 'blue')
+  }
   
   #PRIOR PLOT
   # if (FLAGS_LIST$B_PRIOR_GAMMA) {

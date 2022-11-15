@@ -3,54 +3,9 @@
 #********************************************************
 library(MASS)
 source("~/Github/epidemic_modelling/helper_functions.R")
+source("../helper_functions.R")
 OUTER_FOLDER = "~/PhD_Warwick/Project_Epidemic_Modelling/Results/model_individual_nu/v1"
 ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
-
-#SIMULATION FUNCTION
-SIMULATE_NU = function(num_days = 110, alphaX = 1.2, k = 0.16,
-                       shape_gamma = 6, scale_gamma = 1) {
-  
-  'Simulate from the Negative Binomial model'
-  
-  #INTIALISE VECTORS
-  x = vector('numeric', num_days); x[1] = 2
-  eta_vec = vector('numeric', num_days); 
-  
-  #INFECTIOUSNESS (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
-  prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
-  
-  #DAYS OF THE EPIDEMIC
-  for (t in 2:num_days) {
-    
-    #ETA (t-1)
-    eta_vec[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k) #Draw eta from previous time step
-    #INFECTIVITY
-    infectivity = rev(prob_infect[1:t]) 
-    #POISSON; OFFSPRINT DISTRIBUTION
-    total_rate = sum(eta_vec*infectivity) #DOT PRODUCT
-    x[t] = rpois(1, total_rate)
-    
-  }
-  return(list(epidemic_data = x, eta_vec = eta_vec))
-}
-
-#RUN MCMC MULTIPLE TIMES
-run_mcmc(num_iters = 10){
-  
-  vec_lme = vector(numeric, length = num_iters)
-  for (i in 1:num){
-    
-    print(paste0('ITER ', i))
-    #Run mcmc
-    mcmcX = mcmc() #STORE MCMC?? 
-    log_model_evidence = log_model_evidence(mcmcX$log_like_vec)
-    print(paste0('log_model_evidence =  ', log_model_evidence))
-    vec_lme[i] = log_model_evidence
-    
-  }
-  
-  return(vec_lme)
-}
 
 #**************************************
 #* APPLY + SIMULATIONS 
@@ -59,7 +14,7 @@ run_mcmc(num_iters = 10){
 #DATA I
 seedX = 4
 set.seed(seedX)
-#simX1 = SIMULATE_NU()
+#simX1 = SIMULATE_ETA()
 #dataI = simX1$epidemic_data
 plot.ts(dataI) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
 plot.ts(simX1$eta_vec)
@@ -99,7 +54,7 @@ PLOT_ETA(dataI, mcmcI$eta_matrix, simX1$eta_vec, seedX, eta_start = eta_start)
 #****************
 seedX = 7
 set.seed(seedX)
-#simX2 = SIMULATE_NU()
+#simX2 = SIMULATE_ETA()
 #dataII = simX2$epidemic_data
 #plot.ts(dataII, ylab = 'Daily Infection count',
 #        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
@@ -134,7 +89,7 @@ PLOT_ETA(dataII, mcmcII$eta_matrix, simX2$eta_vec, seedX, eta_start = eta_start)
 #****************
 seedX = 3
 set.seed(seedX)
-#simX3 = SIMULATE_NU(alphaX = 0.9)
+#simX3 = SIMULATE_ETA(alphaX = 0.9)
 #dataIII = simX3$epidemic_data
 #plot.ts(dataIII, ylab = 'Daily Infection count',
 #        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
@@ -160,7 +115,7 @@ dfIII = PLOT_MCMC_ETA_GRID(dataIII, mcmcIII, seedX, simX3$eta_vec, loglike3)
 #****************
 seedX = 4
 set.seed(seedX)
-#simX4 = SIMULATE_NU(k = 1.0)
+#simX4 = SIMULATE_ETA(k = 1.0)
 #dataIV = simX4$epidemic_data
 plot.ts(dataIV, ylab = 'Daily Infection count',
         main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
@@ -180,80 +135,31 @@ mcmcIV$time_elap = time_elap
 #PLOT 
 dfIV = PLOT_MCMC_ETA_GRID(dataIV, mcmcIV, seedX, simX4$eta_vec, loglike4)
 
+#**************
+#* ETA CREDIBLE INTERVALS PRACTICE
+library(RChronoModel)
+library(plotrix)
 
-#****************
-#*DATA I
-#****************
-
-#START MCMC
-start_time = Sys.time()
-print(paste0('start_time:', start_time))
-mcmcIB = MCMC_ADAPTIVE_ETA(dataI, OUTER_FOLDER, seedX)
-end_time = Sys.time()
-time_elap = get_time(start_time, end_time)
-mcmcIB$time_elap = time_elap
-
-#PLOT
-dfIB = PLOT_MCMC_ETA_GRID(dataI, mcmcIB, seedX, simX1$eta_vec, loglike1)
-
-#BAYES FACTOR (Different start points)
-bf2 = get_bayes_factor(mcmcII$log_like_vec, mcmcIIB$log_like_vec)
-bf2
-
-#**********************************
-#* DATA SIMULATIONS
-#***********************************
-
-seedX = 8; #seed 18, 23, 32 interesting
-seedX = seedX + 1
-set.seed(seedX)
-simXXX = SIMULATE_NU()
-dataXX = simXXX$epidemic_data
-plot.ts(dataXX)
-
-#****************
-#*DATA III
-#****************
-seedX = 32
-set.seed(seedX)
-simX3 = SIMULATE_NU()
-dataIII = simX3$epidemic_data
-plot.ts(dataIII) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
-
-#LIKELIHOOD
-loglike3 = LOG_LIKELIHOOD_ETA(dataIII, c(1.2,0.16), simX3$eta_vec)
-loglike3
-
-#START MCMC
-start_time = Sys.time()
-print(paste0('start_time:', start_time))
-mcmcIII = MCMC_ADAPTIVE_ETA(dataIII, OUTER_FOLDER, seedX)
-end_time = Sys.time()
-time_elap = get_time(start_time, end_time)
-mcmcIII$time_elap = time_elap
-
-#PLOT 
-dfIII = PLOT_MCMC_ETA_GRID(dataIII, mcmcIII, seedX, simX3$eta_vec, loglike3)
-
-#BAYES FACTOR (Different start points)
-#bf2 = get_bayes_factor(mcmcII$log_like_vec, mcmcIIB$log_like_vec)
-#bf2
-
-#Test
-for(i in 1:3) { 
-  nam <- paste("A", i, sep = "")
-  assign(nam, rnorm(3)+5)
+ETA_CRED_INTS <- function(eta_matrix, eta_true){
+  
+  #Create a vector of means across columns
+  eta_means = colMeans(eta_matrix)
+  #Upper & lower limits
+  ci = get_ci_matrix(eta_matrix) 
+  print(ci$vec_lower[10])
+  print(ci$vec_upper[10])
+  print(mean(diff(ci$vec_lower, ci$vec_upper)))
+  #Plot
+  plotCI(eta_true, eta_means, ui= ci$vec_lower , li= ci$vec_upper,
+         xlab = 'True eta', ylab = 'Eta', main = 'Eta MCMC Posterior Mean &
+       95 % Credible intervals. N MCMC = 100k',
+         lwd = 2) #xlim = c(min(vec_alpha), max(vec_alpha)))
+  lines(eta_true, eta_true, col = 'red', lwd = 2)
+  
+  
 }
 
-#BQUOTE
-bquote(alpha ~ "; Mean of " ~ eta ~ "~ Ga(). Simulated " .(mcmc_specs$simulated$m1))
+#Apply
+ETA_CRED_INTS(mcmcI$eta_matrix, simX1$eta_vec)
 
-plot.ts(c(1,2,4,5,3), main = 
-          bquote(bold(alpha ~ "; Mean of" ~ eta ~ "~ Ga(). Simulated: " ~ .(mcmc_specs$simulated$m1))))
-
-plot.ts(c(1,2,4,5,3), main = 
-bquote(bold(alpha ~ "Prior: exp("~.(priors_list$alpha_prior[1])~")")))
-
-for(day in seq(eta_start, eta_start + 17, by = 1)){
-  print(day)
-}
+plotCI(c)

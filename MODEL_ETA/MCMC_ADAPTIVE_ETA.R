@@ -3,7 +3,36 @@
 #********************************************************
 library(MASS)
 
+#*********************************************
+#* SIMULATE ETA
 #**********************************************
+SIMULATE_ETA = function(num_days = 110, alphaX = 1.2, k = 0.16,
+                        shape_gamma = 6, scale_gamma = 1) {
+  
+  'Simulate from the Negative Binomial model'
+  
+  #INTIALISE VECTORS
+  x = vector('numeric', num_days); x[1] = 2
+  eta_vec = vector('numeric', num_days); 
+  
+  #INFECTIOUSNESS (Discrete gamma) - I.e 'Infectiousness Pressure' - Sum of all people
+  prob_infect = pgamma(c(1:num_days), shape = shape_gamma, scale = scale_gamma) - pgamma(c(0:(num_days-1)), shape = shape_gamma, scale = scale_gamma)
+  
+  #DAYS OF THE EPIDEMIC
+  for (t in 2:num_days) {
+    
+    #ETA (t-1)
+    eta_vec[t-1] <- rgamma(1, shape = x[t-1]*k, scale = alphaX/k) #Draw eta from previous time step
+    #INFECTIVITY
+    infectivity = rev(prob_infect[1:t]) 
+    #POISSON; OFFSPRINT DISTRIBUTION
+    total_rate = sum(eta_vec*infectivity) #DOT PRODUCT
+    x[t] = rpois(1, total_rate)
+    
+  }
+  return(list(epidemic_data = x, eta_vec = eta_vec))
+}
+
 #LOG LIKELIHOOD
 #**********************************************
 LOG_LIKELIHOOD_ETA <- function(x, nu_params, eta){ #eta - a vector of length x. eta[1] = infectivity of xt[1]
