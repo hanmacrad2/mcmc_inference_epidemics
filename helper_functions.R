@@ -1,9 +1,9 @@
 #R - helper functions
+library(RChronoModel)
 #library(data.table)
 
 ################
 #TIME
-
 print_time <- function(start_time, end_time){
   'Print difference between end & start time'
   

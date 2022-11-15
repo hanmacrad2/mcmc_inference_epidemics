@@ -1,5 +1,68 @@
 #LIBRARIES
 library(coda)
+library(plotrix)
+
+#PLOT ETA ACROS DAYS
+PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
+                     seedX, eta_start = 1,
+                     eta_reps = 17){
+  
+  #PLOT
+  plot.new()
+  par(mfrow=c(4,5))
+  colours <- rainbow(eta_reps + 1); count = 1
+  
+  #PLOT INFECTIONS
+  inf_tite = paste0(" Data. Seed = ", seedX) 
+  plot.ts(epidemic_data, xlab = 'Time', ylab = 'Daily Infections count',
+          main = inf_tite,
+          cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  #PLOT ETA
+  plot.ts(true_eta_vec, xlab = 'Time', ylab = 'Daily Eta',
+          main = "Eta over the course of the Epidemic",
+          cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  
+  for(day in seq(eta_start, eta_start + eta_reps, by = 1)){
+    
+    print(day)
+    eta_dfX = eta_matrix[, day]
+    
+    if (day == eta_start){
+      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
+              main = paste0('Data ', seedX, '. Eta day:', day),
+              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
+    } else {
+      
+      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
+              main = paste0('Eta day', day),
+              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
+    }
+    count = count + 1
+  }
+  
+}
+
+#*****************************
+#PLOT ETA CREDIBLE INTERVALS
+ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true){
+  
+  #Create a vector of means across columns
+  eta_means = colMeans(eta_matrix)
+  #Upper & lower limits
+  ci = get_ci_matrix(eta_matrix) 
+  print(ci$vec_lower[10])
+  print(ci$vec_upper[10])
+  print(mean(ci$vec_upper - ci$vec_lower))
+  #Plot
+  plotCI(eta_true, eta_means, ui = ci$vec_upper, li = ci$vec_lower,
+         xlab = 'Day of Epidemic', ylab = 'Eta', main = 'Eta MCMC Posterior Mean &
+       95 % Credible intervals. Red (True) ', lwd = 2) #xlim = c(min(vec_alpha), max(vec_alpha)))
+  lines(eta_true, eta_true, col = 'red', lwd = 2)
+  
+  
+}
 
 #' Grid Plot of MCMC Individual R0; nu model
 #'
@@ -47,47 +110,6 @@ library(coda)
 #' mod_par_names = c('a', 'b', 'c'), model_type = 'SSI', seed_count = seed_count, thinning_factor = 10)
 #'
 #' df_mcmc_results = PLOT_SS_MCMC_GRID(epidemic_data, mcmc_output) 
-
-PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
-                     seedX, eta_start = 1,
-                     eta_reps = 17){
-  
-  #PLOT
-  plot.new()
-  par(mfrow=c(4,5))
-  colours <- rainbow(eta_reps + 1); count = 1
-  
-  #PLOT INFECTIONS
-  inf_tite = paste0(" Data. Seed = ", seedX) 
-  plot.ts(epidemic_data, xlab = 'Time', ylab = 'Daily Infections count',
-          main = inf_tite,
-          cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-  #PLOT ETA
-  plot.ts(true_eta_vec, xlab = 'Time', ylab = 'Daily Eta',
-          main = "Eta over the course of the Epidemic",
-          cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-  
-  for(day in seq(eta_start, eta_start + eta_reps, by = 1)){
-    
-    print(day)
-    eta_dfX = eta_matrix[, day]
-    
-    if (day == eta_start){
-      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
-              main = paste0('Data ', seedX, '. Eta day:', day),
-              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
-    } else {
-
-      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
-              main = paste0('Eta day', day),
-              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
-    }
-    count = count + 1
-  }
-  
-}
 
 #PLOT MCMC GRID
 PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, log_like_sim,
@@ -324,17 +346,20 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
        lwd = 1)
   abline(h = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2)
   
-  #m3 Mean
-  m3_mean = cumsum(m3_mcmc)/seq_along(m3_mcmc)
-  plot(seq_along(m3_mean), m3_mean,
-       ylim= m3_lim,
-       xlab = 'Time', ylab = mcmc_specs$mod_par_names[3],
-       main = paste0('Mean ', title_eta), 
-       cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
-       lwd = 1)
-  abline(h = eta_sim_val, col = 'green', lwd = 2)
+  #ETA MEAN + CREDIBLE INTERVALS
+  ETA_CREDIBLE_INTERVALS(mcmc_output$eta_matrix, eta_sim)
   
-  #loglike mean
+  #m3 Mean
+  # m3_mean = cumsum(m3_mcmc)/seq_along(m3_mcmc)
+  # plot(seq_along(m3_mean), m3_mean,
+  #      ylim= m3_lim,
+  #      xlab = 'Time', ylab = mcmc_specs$mod_par_names[3],
+  #      main = paste0('Mean ', title_eta), 
+  #      cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
+  #      lwd = 1)
+  # abline(h = eta_sim_val, col = 'green', lwd = 2)
+  
+  #LOGLIKELIHOOD MEAN
   plot(seq_along(cumsum(log_like_mcmc)/seq_along(log_like_mcmc)), cumsum(log_like_mcmc)/seq_along(log_like_mcmc),
        xlab = 'Time', ylab = 'log likelihood',
        main = "Log Likelihood Mean",

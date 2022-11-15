@@ -219,10 +219,10 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
   } #END FOR LOOP
   
   #SAVE
-  saveRDS(dataX, file = paste0(OUTER_FOLDER, 'dataX', seed_count, '.rds' ))
-  saveRDS(nu_params_matrix, file = paste0(OUTER_FOLDER, 'nu_params_matrix_', seed_count, '.rds' ))
-  saveRDS(eta_matrix, file = paste0(OUTER_FOLDER, 'eta_matrix_', seed_count, '.rds' ))
-  saveRDS(log_like_vec, file = paste0(OUTER_FOLDER, 'log_like_vec_', seed_count, '.rds' ))
+  #saveRDS(dataX, file = paste0(OUTER_FOLDER, 'dataX', seed_count, '.rds' ))
+  #saveRDS(nu_params_matrix, file = paste0(OUTER_FOLDER, 'nu_params_matrix_', seed_count, '.rds' ))
+  #saveRDS(eta_matrix, file = paste0(OUTER_FOLDER, 'eta_matrix_', seed_count, '.rds' ))
+  #saveRDS(log_like_vec, file = paste0(OUTER_FOLDER, 'log_like_vec_', seed_count, '.rds' ))
   
   #Final stats
   accept_rate = 100*count_accept/(n_mcmc-1)
