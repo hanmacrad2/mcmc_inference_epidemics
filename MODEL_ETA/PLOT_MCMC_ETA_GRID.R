@@ -46,20 +46,19 @@ PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
 
 #*****************************
 #PLOT ETA CREDIBLE INTERVALS
-ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true){
+ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, lwdX = 1){
   
   #Create a vector of means across columns
   eta_means = colMeans(eta_matrix)
   #Upper & lower limits
   ci = get_ci_matrix(eta_matrix) 
-  print(ci$vec_lower[10])
-  print(ci$vec_upper[10])
-  print(mean(ci$vec_upper - ci$vec_lower))
+  
   #Plot
-  plotCI(eta_true, eta_means, ui = ci$vec_upper, li = ci$vec_lower,
+  plotCI(seq_along(eta_true), eta_means, ui = ci$vec_upper, li = ci$vec_lower,
          xlab = 'Day of Epidemic', ylab = 'Eta', main = 'Eta MCMC Posterior Mean &
-       95 % Credible intervals. Red (True) ', lwd = 2) #xlim = c(min(vec_alpha), max(vec_alpha)))
-  lines(eta_true, eta_true, col = 'red', lwd = 2)
+       95 % Credible intervals. Red (True) ', lwd = lwdX, pch = 16) #xlim = c(min(vec_alpha), max(vec_alpha)))
+  lines(eta_true, col = 'red', lwd = lwdX)
+  points(eta_true, col = 'red', lwd = lwdX)
   
   
 }
@@ -117,10 +116,10 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
                                                  simulated = list(m1 = 1.2, m2 = 1.0),
                                                  mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10,
-                                                 eta_time_point = 80), #28
+                                                 eta_time_point = 6), #80 28
                                priors_list = list(k_prior = c(1,0), alpha_prior = c(1,0)),
                                FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = TRUE,
-                                                 ADAPTIVE = FALSE, ADAPTIVE_II = TRUE, MULTI_ALG = TRUE)){
+                                                 ADAPTIVE = FALSE, MULTI_ALG = TRUE)){
   #priors_list = list(a_prior_exp = c(1, 0), b_prior_ga = c(10, 2/100), b_prior_exp = c(0.1,0), #10, 1/100
   #                   c_prior_ga = c(10, 1), c_prior_exp = c(0.1,0)){
   
@@ -172,7 +171,6 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   minll = min(min(log_like_mcmc, na.rm = TRUE), log_like_sim); maxll = max(max(log_like_mcmc,  na.rm = TRUE), log_like_sim)
   #LIMITS
   m1_lim = c(m1_min, m1_max);  m2_lim = c(m2_min, m2_max);  m3_lim = c(m3_min, m3_max); m4_lim = c(minll, maxll)
-  print(paste0('m4_lim =', m4_lim))
   title_eta = paste(mcmc_specs$mod_par_names[3], "MCMC.", " Day: ", mcmc_specs$eta_time_point)
   #Priors
   m2_prior =  paste0('exp(', priors_list$k_prior[1], ')')
@@ -310,7 +308,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #Hist M3 (ETA)
   hist(m3_mcmc, freq = FALSE, breaks = 100,
        xlab = mcmc_specs$mod_par_names[3], #ylab = 'Density',
-       main = paste(mcmc_specs$mod_par_names[3]), xlim = m3_lim,
+       main = title_eta, xlim = m3_lim,
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   #                   " prior:", m3_prior),
   abline(v = eta_sim_val, col = 'green', lwd = 2)
@@ -347,8 +345,12 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   abline(h = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2)
   
   #ETA MEAN + CREDIBLE INTERVALS
-  ETA_CREDIBLE_INTERVALS(mcmc_output$eta_matrix, eta_sim)
+  ETA_CREDIBLE_INTERVALS(mcmc_output$eta_matrix, eta_sim, lwdX = 1)
   
+  #SIGMA ETA
+  plot.ts(sigma_eta_X,  ylab = paste0('sigma ', mcmc_specs$mod_par_names[3]), 
+          main = paste0('Sigma ', title_eta),
+          cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   #m3 Mean
   # m3_mean = cumsum(m3_mcmc)/seq_along(m3_mcmc)
   # plot(seq_along(m3_mean), m3_mean,
@@ -360,17 +362,17 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   # abline(h = eta_sim_val, col = 'green', lwd = 2)
   
   #LOGLIKELIHOOD MEAN
-  plot(seq_along(cumsum(log_like_mcmc)/seq_along(log_like_mcmc)), cumsum(log_like_mcmc)/seq_along(log_like_mcmc),
-       xlab = 'Time', ylab = 'log likelihood',
-       main = "Log Likelihood Mean",
-       ylim= m4_lim,
-       cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
-       lwd = 1)
-  abline(h = log_like_sim, col = 'orange', lwd = 2)
+  # plot(seq_along(cumsum(log_like_mcmc)/seq_along(log_like_mcmc)), cumsum(log_like_mcmc)/seq_along(log_like_mcmc),
+  #      xlab = 'Time', ylab = 'log likelihood',
+  #      main = "Log Likelihood Mean",
+  #      ylim= m4_lim,
+  #      cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
+  #      lwd = 1)
+  # abline(h = log_like_sim, col = 'orange', lwd = 2)
   
   
   #*****************
-  #ROW 5: DATA INFECTIONS + JOINT DISTRIBUTIONS/MARGINALS
+  #ROW 4: DATA INFECTIONS + JOINT DISTRIBUTIONS/MARGINALS
   #********************
   
   #i. TOTAL INFECTIONS
@@ -379,10 +381,26 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
           main = inf_tite,
           cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   
-  #alpha vs k
+  #ALPHA VS K
   plot(m1_mcmc, m2_mcmc,
        xlab = mcmc_specs$mod_par_names[1], ylab = mcmc_specs$mod_par_names[2],
        main = paste0(mcmc_specs$mod_par_names[1], ' vs ', mcmc_specs$mod_par_names[2]),
+       cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
+       cex = 0.5)
+  
+  #ETA vs K
+  plot(m2_mcmc, m3_mcmc,
+       xlab = mcmc_specs$mod_par_names[2], ylab = mcmc_specs$mod_par_names[3],
+       main = paste0(mcmc_specs$mod_par_names[2], ' vs ', mcmc_specs$mod_par_names[3],
+                     ' Day ', mcmc_specs$eta_time_point),
+       cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
+       cex = 0.5)
+  
+  #ETA VS ALPHA
+  plot(m1_mcmc, m3_mcmc,
+       xlab = mcmc_specs$mod_par_names[1], ylab = mcmc_specs$mod_par_names[3],
+       main = paste0(mcmc_specs$mod_par_names[1], ' vs ', mcmc_specs$mod_par_names[3],
+                     ' Day ', mcmc_specs$eta_time_point),
        cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
        cex = 0.5)
   
@@ -392,22 +410,11 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #      main = paste(mcmc_specs$mod_par_names[1], 'vs', mcmc_specs$mod_par_names[2]),
   #      cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5,
   #      cex = 0.5)
-  
-  #**********************************
-  #ROW 6: ADAPTIVE PARAMETERS
-  #*************************************
-  if (FLAGS_LIST$ADAPTIVE_II){
     
-    #1. SIGMA ETA
-    plot.ts(sigma_eta_X,  ylab = paste0('sigma ', mcmc_specs$mod_par_names[3]), 
-            main = paste0('Sigma ', title_eta),
-            cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-    
-    #2. LAMDA
-    plot.ts(mcmc_output$lambda_vec[burn_in:mcmc_vec_size],  ylab = 'lamda adaptive',
-            main = 'Lamda adaptive',
-            cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-  }
+  # #2. LAMDA
+  # plot.ts(mcmc_output$lambda_vec[burn_in:mcmc_vec_size],  ylab = 'lamda adaptive',
+  #         main = 'Lamda adaptive',
+  #         cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   
   #********************
   #v. DATAFRAME: RESULTS

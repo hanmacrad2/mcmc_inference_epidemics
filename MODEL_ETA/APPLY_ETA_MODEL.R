@@ -35,9 +35,9 @@ time_elap = get_time(start_time, end_time)
 mcmcI$time_elap = time_elap
 saveRDS(mcmcI, file = paste0(OUTER_FOLDER, '/mcmcI', seedX, '.rds' ))
 
-# #PLOT
-# dfI = PLOT_MCMC_ETA_GRID(dataI, mcmcI, seedX, simX1$eta_vec, loglike1)
-# 
+#PLOT
+dfI = PLOT_MCMC_ETA_GRID(dataI, mcmcI, seedX, simX1$eta_vec, loglike1)
+
 # #ETA plots
 # eta_start = 1; eta_step = 18
 # eta1 = mcmcI$eta_matrix
@@ -76,9 +76,9 @@ end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmcII$time_elap = time_elap
 saveRDS(mcmcII, file = paste0(OUTER_FOLDER, '/mcmcII', seedX, '.rds' ))
-# 
-# #PLOT 
-# dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX2$eta_vec, loglike2)
+
+#PLOT
+dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX2$eta_vec, loglike2)
 # 
 # #ETA plots
 # eta_start = 1; eta_step = 18
@@ -115,7 +115,7 @@ mcmcIII$time_elap = time_elap
 saveRDS(mcmcIII, file = paste0(OUTER_FOLDER, '/mcmcIII', seedX, '.rds' ))
 
 #PLOT 
-#dfIII = PLOT_MCMC_ETA_GRID(dataIII, mcmcIII, seedX, simX3$eta_vec, loglike3)
+dfIII = PLOT_MCMC_ETA_GRID(dataIII, mcmcIII, seedX, simX3$eta_vec, loglike3)
 
 #****************
 #*DATA IV
@@ -142,7 +142,7 @@ mcmcIV$time_elap = time_elap
 saveRDS(mcmcIV, file = paste0(OUTER_FOLDER, '/mcmcIV', seedX, '.rds' ))
 
 #PLOT 
-#dfIV = PLOT_MCMC_ETA_GRID(dataIV, mcmcIV, seedX, simX4$eta_vec, loglike4)
+dfIV = PLOT_MCMC_ETA_GRID(dataIV, mcmcIV, seedX, simX4$eta_vec, loglike4)
 
 #**************
 #* ETA CREDIBLE INTERVALS PRACTICE
@@ -167,7 +167,29 @@ ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true){
   
 }
 
+#PLOT ETA CREDIBLE INTERVALS
+ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, lwdX = 2){
+  
+  #Create a vector of means across columns
+  eta_means = colMeans(eta_matrix)
+  #Upper & lower limits
+  ci = get_ci_matrix(eta_matrix) 
+  
+  #Plot
+  plotCI(seq_along(eta_true), eta_means, ui = ci$vec_upper, li = ci$vec_lower,
+         xlab = 'Day of Epidemic', ylab = 'Eta', main = 'Eta MCMC Posterior Mean &
+       95 % Credible intervals. Red (True) ', lwd = lwdX, pch = 16) #xlim = c(min(vec_alpha), max(vec_alpha)))
+  lines(eta_true, col = 'red', lwd = lwdX, pch = 16)
+  points(eta_true, col = 'red', lwd = lwdX, pch = 16)
+  
+  
+}
+
 #Apply
 ETA_CREDIBLE_INTERVALS(mcmcI$eta_matrix, simX1$eta_vec)
+
+plot.new(); par(mfrow = c(1,1))
+eta_matrix_2 = mcmcII$eta_matrix
+ETA_CREDIBLE_INTERVALS(mcmcII$eta_matrix, simX2$eta_vec)
 
 plotCI(c)
