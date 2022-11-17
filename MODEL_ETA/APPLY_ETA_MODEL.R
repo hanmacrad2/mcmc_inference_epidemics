@@ -47,8 +47,8 @@ eta_start = 1; eta_step = 17
 PLOT_ETA(dataI, mcmcI$eta_matrix, simX1$eta_vec, seedX)
 
 #Plot eta II
-eta_start = eta_start + eta_step
-print(eta_start)
+eta_start = eta_start + eta_step; print(eta_start)
+eta_start = 94
 PLOT_ETA(dataI, mcmcI$eta_matrix, simX1$eta_vec, seedX, eta_start = eta_start)
 
 #BAYES FACTOR
@@ -86,15 +86,15 @@ dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX2$eta_vec, loglike2)
 plot.new(); par(mfrow=c(1,1))
 ETA_CREDIBLE_INTERVALS(mcmcII$eta_matrix, simX2$eta_vec, lwdX = 2)
 
-# #ETA plots
-# eta_start = 1; eta_step = 18
-# eta2 = mcmcII$eta_matrix
-# PLOT_ETA(dataII, mcmcII$eta_matrix, simX2$eta_vec, seedX) 
-# 
-# #Plot eta II
-# eta_start = eta_start + eta_step
-# print(eta_start)
-# PLOT_ETA(dataII, mcmcII$eta_matrix, simX2$eta_vec, seedX, eta_start = eta_start)
+#ETA plots
+eta_start = 1; eta_step = 17
+PLOT_ETA(dataII, mcmcII$eta_matrix, simX2$eta_vec, seedX)
+
+#Plot eta II
+eta_start = eta_start + eta_step
+print(eta_start)
+eta_start = 94
+PLOT_ETA(dataII, mcmcII$eta_matrix, simX2$eta_vec, seedX, eta_start = eta_start)
 
 #****************
 #*DATA III (alpha = 0.9, k = 0.16)
@@ -158,52 +158,35 @@ dfIV = PLOT_MCMC_ETA_GRID(dataIV, mcmcIV, seedX, simX4$eta_vec, loglike4)
 plot.new(); par(mfrow=c(1,1))
 ETA_CREDIBLE_INTERVALS(mcmcIV$eta_matrix, simX4$eta_vec, lwdX = 2)
 
-#**************
-#* ETA CREDIBLE INTERVALS PRACTICE
-library(RChronoModel)
-library(plotrix)
 
-ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true){
-  
-  #Create a vector of means across columns
-  eta_means = colMeans(eta_matrix)
-  #Upper & lower limits
-  ci = get_ci_matrix(eta_matrix) 
-  print(ci$vec_lower[10])
-  print(ci$vec_upper[10])
-  print(mean(ci$vec_upper - ci$vec_lower))
-  #Plot
-  plotCI(eta_true, eta_means, ui = ci$vec_upper, li = ci$vec_lower,
-         xlab = 'True eta', ylab = 'Eta', main = 'Eta MCMC Posterior Mean &
-       95 % Credible intervals. N MCMC = 100k', lwd = 2) #xlim = c(min(vec_alpha), max(vec_alpha)))
-  lines(eta_true, eta_true, col = 'red', lwd = 2)
-  
-  
-}
+#****************
+#*DATA V (alpha = 0.9, k = 0.16)
+#****************
+seedX = 5
+set.seed(seedX)
+simX5 = SIMULATE_ETA(alphaX = 1.0)
+dataV = simX5$epidemic_data
+plot.ts(dataV, ylab = 'Daily Infection count',
+        main = 'Individual reproduction number model') #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
+saveRDS(simX5, file = paste0(OUTER_FOLDER, '/simX5_', seedX, '.rds' ))
 
-#PLOT ETA CREDIBLE INTERVALS
-ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, lwdX = 2){
-  
-  #Create a vector of means across columns
-  eta_means = colMeans(eta_matrix)
-  #Upper & lower limits
-  ci = get_ci_matrix(eta_matrix) 
-  
-  #Plot
-  plotCI(seq_along(eta_true), eta_means, ui = ci$vec_upper, li = ci$vec_lower,
-         xlab = 'Day of Epidemic', ylab = 'Eta', main = 'Eta MCMC Posterior Mean &
-       95 % Credible intervals. Red (True) ', lwd = lwdX, pch = 16) #xlim = c(min(vec_alpha), max(vec_alpha)))
-  lines(eta_true, col = 'red', lwd = lwdX, pch = 16)
-  points(eta_true, col = 'red', lwd = lwdX, pch = 16)
-  
-  
-}
+#LIKELIHOOD
+loglike5 = LOG_LIKELIHOOD_ETA(dataV, c(1.0,0.16), simX5$eta_vec)
+loglike5
 
-#Apply
-ETA_CREDIBLE_INTERVALS(mcmcI$eta_matrix, simX1$eta_vec)
+#START MCMC
+start_time = Sys.time()
+print(paste0('start_time:', start_time))
+mcmcV = MCMC_ADAPTIVE_ETA(dataV, OUTER_FOLDER, seedX)
+end_time = Sys.time()
+time_elap = get_time(start_time, end_time)
+mcmcV$time_elap = time_elap
+saveRDS(mcmcV, file = paste0(OUTER_FOLDER, '/mcmcV', seedX, '.rds' ))
 
-plot.new(); par(mfrow = c(1,1))
-eta_matrix_2 = mcmcII$eta_matrix
-ETA_CREDIBLE_INTERVALS(mcmcII$eta_matrix, simX2$eta_vec)
+#PLOT 
+dfV = PLOT_MCMC_ETA_GRID(dataV, mcmcV, seedX, simX5$eta_vec, loglike5)
 
-plotCI(c)
+#ETA CREDIBLE INTERVALS
+plot.new(); par(mfrow=c(1,1))
+ETA_CREDIBLE_INTERVALS(mcmcV$eta_matrix, simX5$eta_vec, lwdX = 2)
+

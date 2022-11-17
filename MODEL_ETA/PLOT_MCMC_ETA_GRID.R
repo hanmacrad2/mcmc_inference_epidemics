@@ -1,5 +1,6 @@
 #LIBRARIES
 library(coda)
+library(RChronoModel)
 library(plotrix)
 
 #PLOT ETA ACROS DAYS
@@ -20,7 +21,7 @@ PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
   
   #PLOT ETA
   plot.ts(true_eta_vec, xlab = 'Time', ylab = 'Daily Eta',
-          main = "Eta -- Epidemic Simulation",
+          main = "Eta: Epidemic Simulation",
           cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
   
   #PLOT CREDIBLE INTERVAL
@@ -31,21 +32,13 @@ PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
     print(day)
     eta_dfX = eta_matrix[, day]
     
-    if (day == eta_start){
-      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
-              main = paste0('Data ', seedX, '. Eta day:', day),
-              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
-    } else {
-      
-      plot.ts(eta_dfX,  ylab = paste0('Eta day', day), #ylim = m3_lim,
-              main = paste0('Eta day', day),
-              cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
-      abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
-    }
-    count = count + 1
-  }
+    plot.ts(eta_dfX,  ylab = paste0('Eta day ', day), #ylim = m3_lim,
+            main = paste0('Eta day ', day),
+            cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+    abline(h = true_eta_vec[day], col = colours[count], lwd = 2)
+  count = count + 1
   
+  }
 }
 
 #*****************************
