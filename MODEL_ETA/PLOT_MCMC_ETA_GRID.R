@@ -5,7 +5,7 @@ library(plotrix)
 #PLOT ETA ACROS DAYS
 PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
                      seedX, eta_start = 1,
-                     eta_reps = 17){
+                     eta_reps = 16){
   
   #PLOT
   plot.new()
@@ -13,14 +13,18 @@ PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
   colours <- rainbow(eta_reps + 1); count = 1
   
   #PLOT INFECTIONS
-  inf_tite = paste0(" Data. Seed = ", seedX) 
+  inf_title = paste0(" Data. Seed = ", seedX) 
   plot.ts(epidemic_data, xlab = 'Time', ylab = 'Daily Infections count',
-          main = inf_tite,
+          main = inf_title,
           cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  
   #PLOT ETA
   plot.ts(true_eta_vec, xlab = 'Time', ylab = 'Daily Eta',
-          main = "Eta over the course of the Epidemic",
+          main = "Eta -- Epidemic Simulation",
           cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+  
+  #PLOT CREDIBLE INTERVAL
+  ETA_CREDIBLE_INTERVALS(eta_matrix, true_eta_vec)
   
   for(day in seq(eta_start, eta_start + eta_reps, by = 1)){
     
@@ -46,7 +50,8 @@ PLOT_ETA <- function(epidemic_data, eta_matrix, true_eta_vec,
 
 #*****************************
 #PLOT ETA CREDIBLE INTERVALS
-ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, lwdX = 1){
+ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, pchX = 16,
+                                   lwdX = 1){
   
   #Create a vector of means across columns
   eta_means = colMeans(eta_matrix)
@@ -55,10 +60,11 @@ ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, lwdX = 1){
   
   #Plot
   plotCI(seq_along(eta_true), eta_means, ui = ci$vec_upper, li = ci$vec_lower,
-         xlab = 'Day of Epidemic', ylab = 'Eta', main = 'Eta MCMC Posterior Mean &
-       95 % Credible intervals. Red (True) ', lwd = lwdX, pch = 16) #xlim = c(min(vec_alpha), max(vec_alpha)))
+         xlab = 'Day of Epidemic', ylab = 'Eta',
+         main = 'Eta MCMC across the Epidemic 
+       Posterior Mean & 95 % CI. Red (True/Simulated) ', lwd = lwdX, pch = 16) #xlim = c(min(vec_alpha), max(vec_alpha)))
+  points(eta_true, col = 'red', lwd = lwdX, pch = pchX)
   lines(eta_true, col = 'red', lwd = lwdX)
-  points(eta_true, col = 'red', lwd = lwdX)
   
   
 }
@@ -113,7 +119,7 @@ ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, lwdX = 1){
 #PLOT MCMC GRID
 PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, log_like_sim,
                                mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100000,
-                                                 simulated = list(m1 = 1.2, m2 = 1.0),
+                                                 simulated = list(m1 = 1.2, m2 = 0.16),
                                                  mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10,
                                                  eta_time_point = 6), #80 28

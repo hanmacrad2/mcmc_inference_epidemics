@@ -38,16 +38,18 @@ saveRDS(mcmcI, file = paste0(OUTER_FOLDER, '/mcmcI', seedX, '.rds' ))
 #PLOT
 dfI = PLOT_MCMC_ETA_GRID(dataI, mcmcI, seedX, simX1$eta_vec, loglike1)
 
-# #ETA plots
-# eta_start = 1; eta_step = 18
-# eta1 = mcmcI$eta_matrix
-# PLOT_ETA(dataI, mcmcI$eta_matrix, simX1$eta_vec, seedX) 
-# 
-# #Plot eta II
-# eta_start = eta_start + eta_step
-# eta_start = eta_start + 1
-# print(eta_start)
-# PLOT_ETA(dataI, mcmcI$eta_matrix, simX1$eta_vec, seedX, eta_start = eta_start)
+#ETA CREDIBLE INTERVALS
+plot.new(); par(mfrow=c(1,1))
+ETA_CREDIBLE_INTERVALS(mcmcI$eta_matrix, simX1$eta_vec, lwdX = 2)
+
+#ETA plots
+eta_start = 1; eta_step = 17
+PLOT_ETA(dataI, mcmcI$eta_matrix, simX1$eta_vec, seedX)
+
+#Plot eta II
+eta_start = eta_start + eta_step
+print(eta_start)
+PLOT_ETA(dataI, mcmcI$eta_matrix, simX1$eta_vec, seedX, eta_start = eta_start)
 
 #BAYES FACTOR
 #bf1 = get_bayes_factor(mcmcI$log_like_vec, mcmcIB$log_like_vec)
@@ -79,7 +81,11 @@ saveRDS(mcmcII, file = paste0(OUTER_FOLDER, '/mcmcII', seedX, '.rds' ))
 
 #PLOT
 dfII = PLOT_MCMC_ETA_GRID(dataII, mcmcII, seedX, simX2$eta_vec, loglike2)
-# 
+
+#ETA CREDIBLE INTERVALS
+plot.new(); par(mfrow=c(1,1))
+ETA_CREDIBLE_INTERVALS(mcmcII$eta_matrix, simX2$eta_vec, lwdX = 2)
+
 # #ETA plots
 # eta_start = 1; eta_step = 18
 # eta2 = mcmcII$eta_matrix
@@ -117,6 +123,10 @@ saveRDS(mcmcIII, file = paste0(OUTER_FOLDER, '/mcmcIII', seedX, '.rds' ))
 #PLOT 
 dfIII = PLOT_MCMC_ETA_GRID(dataIII, mcmcIII, seedX, simX3$eta_vec, loglike3)
 
+#ETA CREDIBLE INTERVALS
+plot.new(); par(mfrow=c(1,1))
+ETA_CREDIBLE_INTERVALS(mcmcIII$eta_matrix, simX3$eta_vec, lwdX = 2)
+
 #****************
 #*DATA IV
 #****************
@@ -143,6 +153,10 @@ saveRDS(mcmcIV, file = paste0(OUTER_FOLDER, '/mcmcIV', seedX, '.rds' ))
 
 #PLOT 
 dfIV = PLOT_MCMC_ETA_GRID(dataIV, mcmcIV, seedX, simX4$eta_vec, loglike4)
+
+#ETA CREDIBLE INTERVALS
+plot.new(); par(mfrow=c(1,1))
+ETA_CREDIBLE_INTERVALS(mcmcIV$eta_matrix, simX4$eta_vec, lwdX = 2)
 
 #**************
 #* ETA CREDIBLE INTERVALS PRACTICE
