@@ -101,7 +101,7 @@ plot.ts(sim_data, ylab = 'Daily infection count',
 
 #*******************************************************
 #II. SUPER-SPREADING EVENTS SIMULATION + POISSON
-simulate_ss_poisson = function(num_days, shape_gamma, scale_gamma, alphaX, betaX, gammaX) {
+SIMULATE_SSE_BRANCHING = function(shape_gamma, scale_gamma, alphaX, betaX, gammaX) {
   'Simulate an epidemic with Superspreading events
   prop_ss = Proportion of superspreading days
   magnitude_ss = increased rate of superspreading event'

@@ -230,12 +230,15 @@ data10 = sim10$epidemic_data
 plot.ts(data10)
 
 #START MCMC
+Rprof(tmp <- tempfile())
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
 mcmc10 = MCMC_ADAPTIVE_ETA(data10, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc10$time_elap = time_elap
+Rprof()
+summaryRprof(tmp)
 
 #Results
 vec_means[seedX] = mean(mcmc10$nu_params_matrix[, 1]) 

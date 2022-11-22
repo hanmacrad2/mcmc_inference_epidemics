@@ -112,10 +112,10 @@ ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, pchX = 16,
 #PLOT MCMC GRID
 PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, log_like_sim,
                                mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100000,
-                                                 simulated = list(m1 = 1.2, m2 = 0.16),
+                                                 simulated = list(m1 = 1.0, m2 = 0.16),
                                                  mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10,
-                                                 eta_time_point = 6), #80 28
+                                                 eta_time_point = 1), #80 28
                                priors_list = list(k_prior = c(1,0), alpha_prior = c(1,0)),
                                FLAGS_LIST = list(BURN_IN = TRUE, THIN = TRUE, PRIOR = TRUE,
                                                  ADAPTIVE = FALSE, MULTI_ALG = TRUE)){

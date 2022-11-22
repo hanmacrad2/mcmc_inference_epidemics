@@ -74,13 +74,13 @@ LOG_LIKELIHOOD_ETA <- function(x, nu_params, eta){ #eta - a vector of length x. 
 #********************************************************
 #1. INDIVIDUAL R0 MCMC ADAPTIVE SHAPING                           
 #********************************************************
-MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
-                              mcmc_inputs = list(n_mcmc = 100000,
+MCMC_ADAPTIVE_ETA <- function(dataX, seed_count, OUTER_FOLDER = '',
+                              mcmc_inputs = list(n_mcmc = 1000, #00,
                                                  mod_start_points = c(1.2, 0.16),
                                                  dim = 2, target_acceptance_rate = 0.4, v0 = 100,  #priors_list = list(alpha_prior = c(1, 0), k_prior = c()),
                                                  thinning_factor = 10),
                               priors_list = list(k_prior = c(1, 0)),
-                              FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE, PRIOR_K1 = TRUE,
+                              FLAGS_LIST = list(ADAPTIVE = TRUE, THIN = TRUE, SAVE = FALSE, PRIOR_K1 = TRUE,
                                                 PRIOR_K2 = FALSE)) {    
   
   #NOTE:
@@ -124,12 +124,14 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
   sigma_eta_matrix = matrix(0, mcmc_vec_size, num_days); sigma_eta_matrix[1,] =  sigma_eta;
   
   #DIRECTORY - SAVING
-  ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
-  
+  if(FLAGS_LIST$SAVE){
+    ifelse(!dir.exists(file.path(OUTER_FOLDER)), dir.create(file.path(OUTER_FOLDER), recursive = TRUE), FALSE)
+  }
+ 
   #MCMC (#RENAME NU_PARAMS AS PARAMS)
   for(i in 2:n_mcmc) {
     
-    if(i%%(n_mcmc/100) == 0) print(paste0('i = ', i))
+    if(i%%100 == 0) print(paste0('i = ', i))
     
     #PROPOSAL
     nu_params_dash = c(nu_params + mvrnorm(1, mu = rep(0, mcmc_inputs$dim), Sigma = lambda_i*c_star*sigma_i)) 
@@ -219,10 +221,12 @@ MCMC_ADAPTIVE_ETA <- function(dataX, OUTER_FOLDER, seed_count,
   } #END FOR LOOP
   
   #SAVE
-  #saveRDS(dataX, file = paste0(OUTER_FOLDER, 'dataX', seed_count, '.rds' ))
-  #saveRDS(nu_params_matrix, file = paste0(OUTER_FOLDER, 'nu_params_matrix_', seed_count, '.rds' ))
-  #saveRDS(eta_matrix, file = paste0(OUTER_FOLDER, 'eta_matrix_', seed_count, '.rds' ))
-  #saveRDS(log_like_vec, file = paste0(OUTER_FOLDER, 'log_like_vec_', seed_count, '.rds' ))
+  if(FLAGS_LIST$SAVE){
+    saveRDS(dataX, file = paste0(OUTER_FOLDER, 'dataX', seed_count, '.rds' ))
+    saveRDS(nu_params_matrix, file = paste0(OUTER_FOLDER, 'nu_params_matrix_', seed_count, '.rds' ))
+    saveRDS(eta_matrix, file = paste0(OUTER_FOLDER, 'eta_matrix_', seed_count, '.rds' ))
+    saveRDS(log_like_vec, file = paste0(OUTER_FOLDER, 'log_like_vec_', seed_count, '.rds' ))
+  } 
   
   #Final stats
   accept_rate = 100*count_accept/(n_mcmc-1)
