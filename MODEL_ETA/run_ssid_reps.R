@@ -1,6 +1,7 @@
 #Librarys
 library(RChronoModel)
 library(plotrix)
+kX = 0.16
 
 #CREDIBLE INTERVAL
 get_lower_ci <- function(mcmc_output){
@@ -42,13 +43,13 @@ plot.ts(data11)
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc111 = MCMC_ADAPTIVE_ETA(data11, OUTER_FOLDER, seedX)
+mcmc111 = MCMC_ADAPTIVE_SSID(data11, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc111$time_elap = time_elap
 
-print(paste0('mean 1', mean(mcmc111$nu_params_matrix[, 1])))
-vec_means[seedX] = mean(mcmc111$nu_params_matrix[, 1])
+print(paste0('mean 1', mean(mcmc111$ssid_params_matrix[, 1])))
+vec_means[seedX] = mean(mcmc111$ssid_params_matrix[, 1])
 vec_lower[seedX] = get_lower_ci(mcmc111) 
 vec_upper[seedX] = get_upper_ci(mcmc111) 
 
@@ -56,18 +57,18 @@ vec_upper[seedX] = get_upper_ci(mcmc111)
 #DATA 2
 seedX = seedX + 1
 set.seed(seedX)
-sim22 = SIMULATE_NU(alphaX = vec_alpha[seedX])
+sim22 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
 data22 = sim22$epidemic_data
 plot.ts(data22)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc222 = MCMC_ADAPTIVE_ETA(data22, OUTER_FOLDER, seedX)
+mcmc222 = MCMC_ADAPTIVE_SSID(data22, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc222$time_elap = time_elap
-vec_means[seedX] = mean(mcmc222$nu_params_matrix[, 1])
+vec_means[seedX] = mean(mcmc222$ssid_params_matrix[, 1])
 vec_lower[seedX] = get_lower_ci(mcmc222) 
 vec_upper[seedX] = get_upper_ci(mcmc222) 
 
@@ -76,20 +77,20 @@ vec_upper[seedX] = get_upper_ci(mcmc222)
 #seedX = seedX + 1
 seedX = 3
 set.seed(seedX)
-#sim33 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data33 = sim33$epidemic_data
-#plot.ts(data33)
+sim33 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
+data33 = sim33$epidemic_data
+plot.ts(data33)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc333 = MCMC_ADAPTIVE_ETA(data33, OUTER_FOLDER, seedX)
+mcmc333 = MCMC_ADAPTIVE_SSID(data33, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc333$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc333$nu_params_matrix[, 1])
+vec_means[seedX] = mean(mcmc333$ssid_params_matrix[, 1])
 vec_lower[seedX] = get_lower_ci(mcmc333) 
 vec_upper[seedX] = get_upper_ci(mcmc333) 
 
@@ -97,7 +98,7 @@ vec_upper[seedX] = get_upper_ci(mcmc333)
 #DATA: ALPHA = 1.2
 seedX = seedX + 1
 set.seed(seedX)
-#simX1 = SIMULATE_NU()
+simX1 = SIMULATE_SSID()
 #dataj = simX1$epidemic_data
 #plot.ts(dataj) #DATA II LOOKS GOOD; SEED = 7. seed 4 (data I)
 
@@ -108,127 +109,149 @@ set.seed(seedX)
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc44 = MCMC_ADAPTIVE_ETA(dataI, OUTER_FOLDER, seedX)
+mcmc44 = MCMC_ADAPTIVE_SSID(dataI, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc44$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc44$nu_params_matrix[, 1])
+vec_means[seedX] = mean(mcmc44$ssid_params_matrix[, 1])
 vec_lower[seedX] = get_lower_ci(mcmc44) 
 vec_upper[seedX] = get_upper_ci(mcmc44)
 
 #****************
 #DATA 5
-seedX = seedX + 1
-set.seed(seedX)
-#sim55 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data55 = sim55$epidemic_data
-#plot.ts(data55)
+seedX = 
+#set.seed(seedX)
+sim55 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
+data55 = sim55$epidemic_data
+plot.ts(data55)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc555 = MCMC_ADAPTIVE_ETA(data55, OUTER_FOLDER, seedX)
+mcmc555 = MCMC_ADAPTIVE_SSID(data55, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc555$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc555$nu_params_matrix[, 1])
+vec_means[seedX] = mean(mcmc555$ssid_params_matrix[, 1])
 vec_lower[seedX] = get_lower_ci(mcmc555) 
 vec_upper[seedX] = get_upper_ci(mcmc555)
 
 #*****************************
 #* DATA 6
 seedX = seedX + 1
-set.seed(seedX)
-#sim66 = SIMULATE_NU(alphaX = vec_alpha[seedX])
-#data66 = sim66$epidemic_data
-#plot.ts(data66)
+#set.seed(seedX)
+sim66 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
+data66 = sim66$epidemic_data
+plot.ts(data66)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc666 = MCMC_ADAPTIVE_ETA(data66, OUTER_FOLDER, seedX)
+mcmc666 = MCMC_ADAPTIVE_SSID(data66, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc666$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc666$nu_params_matrix[, 1]) 
+vec_means[seedX] = mean(mcmc666$ssid_params_matrix[, 1]) 
 vec_lower[seedX] = get_lower_ci(mcmc666) 
 vec_upper[seedX] = get_upper_ci(mcmc666)
 
 #*****************************
 #* DATA 7
-seedX = seedX + 1
-set.seed(seedX)
-#sim77 = SIMULATE_NU(alphaX = vec_alpha[seedX])
+seedX = 7
+#set.seed(seedX)
+#sim77 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
 #data77 = sim77$epidemic_data
 #plot.ts(data77)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc777 = MCMC_ADAPTIVE_ETA(data77, OUTER_FOLDER, seedX)
+mcmc777 = MCMC_ADAPTIVE_SSID(data77, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc777$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc777$nu_params_matrix[, 1]) 
+vec_means[seedX] = mean(mcmc777$ssid_params_matrix[, 1]) 
 vec_lower[seedX] = get_lower_ci(mcmc777) 
 vec_upper[seedX] = get_upper_ci(mcmc777)
+
+#PLOT
+n_mcmc = 20000
+seedX = 7
+PLOT_SSID_MCMC_GRID(data77, mcmc777, sim77$eta_vec, seedX, -500,
+                    n_mcmc,
+                    simulated = list(m1 = vec_alpha[seedX], m2 = kX))
+#simulated = list(m1 = 1.0, m2 = 0.16)
 
 #*****************************
 #* DATA 8
 seedX = seedX + 1
-set.seed(seedX)
-#sim88 = SIMULATE_NU(alphaX = vec_alpha[seedX])
+#set.seed(seedX)
+#sim88 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
 #data88 = sim88$epidemic_data
 #plot.ts(data88)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc888 = MCMC_ADAPTIVE_ETA(data88, OUTER_FOLDER, seedX)
+mcmc888 = MCMC_ADAPTIVE_SSID(data88, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc888$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc888$nu_params_matrix[, 1]) 
+vec_means[seedX] = mean(mcmc888$ssid_params_matrix[, 1]) 
 vec_lower[seedX] = get_lower_ci(mcmc888) 
 vec_upper[seedX] = get_upper_ci(mcmc888)
+
+#PLOT
+n_mcmc = 20000
+seedX = 8
+PLOT_SSID_MCMC_GRID(data88, mcmc888, sim88$eta_vec, seedX, -500,
+                    n_mcmc,
+                    simulated = list(m1 = vec_alpha[seedX], m2 = kX))
 
 #*****************************
 #* DATA 9
 seedX = seedX + 1
-set.seed(seedX)
-#sim99 = SIMULATE_NU(alphaX = vec_alpha[seedX])
+#set.seed(seedX)
+#sim99 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
 #data99 = sim99$epidemic_data
 #plot.ts(data99)
 
 #START MCMC
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc999 = MCMC_ADAPTIVE_ETA(data99, OUTER_FOLDER, seedX)
+mcmc999 = MCMC_ADAPTIVE_SSID(data99, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc999$time_elap = time_elap
 
 #Results
-vec_means[seedX] = mean(mcmc999$nu_params_matrix[, 1]) 
+vec_means[seedX] = mean(mcmc999$ssid_params_matrix[, 1]) 
 vec_lower[seedX] = get_lower_ci(mcmc999) 
 vec_upper[seedX] = get_upper_ci(mcmc999)
+
+#PLOT
+n_mcmc = 20000
+seedX = 9
+PLOT_SSID_MCMC_GRID(data99, mcmc999, sim99$eta_vec, seedX, -500,
+                    n_mcmc,
+                    simulated = list(m1 = vec_alpha[seedX], m2 = kX))
 
 #*****************************
 #* DATA 10
 seedX = seedX + 1
 seedX = 10
 set.seed(seedX)
-sim10 = SIMULATE_NU(alphaX = vec_alpha[seedX])
+sim10 = SIMULATE_SSID(alphaX = vec_alpha[seedX])
 data10 = sim10$epidemic_data
 plot.ts(data10)
 
@@ -236,7 +259,7 @@ plot.ts(data10)
 Rprof(tmp <- tempfile())
 start_time = Sys.time()
 print(paste0('start_time:', start_time))
-mcmc10 = MCMC_ADAPTIVE_ETA(data10, OUTER_FOLDER, seedX)
+mcmc10 = MCMC_ADAPTIVE_SSID(data10, OUTER_FOLDER, seedX)
 end_time = Sys.time()
 time_elap = get_time(start_time, end_time)
 mcmc10$time_elap = time_elap
@@ -244,7 +267,7 @@ Rprof()
 summaryRprof(tmp)
 
 #Results
-vec_means[seedX] = mean(mcmc10$nu_params_matrix[, 1]) 
+vec_means[seedX] = mean(mcmc10$ssid_params_matrix[, 1]) 
 vec_lower[seedX] = get_lower_ci(mcmc10) 
 vec_upper[seedX] = get_upper_ci(mcmc10)
 

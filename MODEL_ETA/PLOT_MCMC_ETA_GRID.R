@@ -110,9 +110,10 @@ ETA_CREDIBLE_INTERVALS <- function(eta_matrix, eta_true, pchX = 16,
 #' df_mcmc_results = PLOT_SS_MCMC_GRID(epidemic_data, mcmc_output) 
 
 #PLOT MCMC GRID
-PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, log_like_sim,
-                               mcmc_specs = list(model_type = 'Simulated', n_mcmc = 100000,
-                                                 simulated = list(m1 = 1.0, m2 = 0.16),
+PLOT_SSID_MCMC_GRID <- function(epidemic_data, mcmc_output, eta_sim, seed_count,
+                                log_like_sim, n_mcmc,
+                                simulated = list(m1 = 1.0, m2 = 0.16),
+                               mcmc_specs = list(model_type = 'Simulated',
                                                  mod_start_points = list(m1 = 1.2, m2 = 0.16), mod_par_names = c('alpha', 'k', 'eta'),
                                                  burn_in_pc = 0.05, thinning_factor = 10,
                                                  eta_time_point = 1), #80 28
@@ -127,12 +128,11 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   par(mfrow=c(4,4))
   
   #EXTRACT MCMC SAMPLES
-  n_mcmc = mcmc_specs$n_mcmc
   log_like_mcmc = mcmc_output$log_like_vec; log_like_mcmc = unlist(log_like_mcmc)
   
   if (FLAGS_LIST$MULTI_ALG){
-    m1_mcmc = mcmc_output$nu_params_matrix[,1]; m1_mcmc = unlist(m1_mcmc); m1_mcmc = m1_mcmc[!is.na(m1_mcmc)]
-    m2_mcmc = mcmc_output$nu_params_matrix[,2]; m2_mcmc = unlist(m2_mcmc); m2_mcmc = m2_mcmc[!is.na(m2_mcmc)]
+    m1_mcmc = mcmc_output$ssid_params_matrix[,1]; m1_mcmc = unlist(m1_mcmc); m1_mcmc = m1_mcmc[!is.na(m1_mcmc)]
+    m2_mcmc = mcmc_output$ssid_params_matrix[,2]; m2_mcmc = unlist(m2_mcmc); m2_mcmc = m2_mcmc[!is.na(m2_mcmc)]
     m3_mcmc = mcmc_output$eta_matrix[, mcmc_specs$eta_time_point]; m3_mcmc = unlist(m3_mcmc); m3_mcmc = m3_mcmc[!is.na(m3_mcmc)]
     sigma_eta_X = mcmc_output$sigma_eta_matrix[, mcmc_specs$eta_time_point]; sigma_eta_X = unlist(sigma_eta_X); sigma_eta_X = sigma_eta_X[!is.na(sigma_eta_X)]
     eta_sim_val = eta_sim[mcmc_specs$eta_time_point]
@@ -199,7 +199,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   #************************
 
   #alpha
-  alpha_title = bquote(bold(alpha ~ "; Mean of" ~ eta ~ "~ Ga(). Simulated: " ~ .(mcmc_specs$simulated$m1)))
+  alpha_title = bquote(bold(alpha ~ "; Mean of" ~ eta ~ "~ Ga(). Simulated: " ~ .(simulated$m1)))
   if (!FLAGS_LIST$ADAPTIVE){
     plot.ts(m1_mcmc, ylab = mcmc_specs$mod_par_names[1], ylim= m1_lim, #bquote("Hello" ~ r[xy] == .(cor) ~ "and" ~ B^2)
             main = alpha_title,
@@ -209,7 +209,7 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
     sig1 = mcmc_output$sigma$sigma1_vec
     plot.ts(m1_mcmc, ylab = paste0(mcmc_specs$mod_par_names[1], ",sigma"), #ylim=c(min(min(sig1),min(m1_mcmc)), max(m1_mcmc)),
             main = paste(mcmc_specs$mod_par_names[1], "MCMC",
-                         "Start: ", mcmc_specs$simulated$m1, ', Sigma (red)'),
+                         "Start: ", simulated$m1, ', Sigma (red)'),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     lines(mcmc_output$sigma$sigma1_vec, col = 'red')
   }
@@ -219,13 +219,13 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
   if (!FLAGS_LIST$ADAPTIVE){
     plot.ts(m2_mcmc, ylab = mcmc_specs$mod_par_names[3], ylim= m2_lim,
             main = paste(mcmc_specs$mod_par_names[2], "MCMC",
-                         "Simulated: ", mcmc_specs$simulated$m2),
+                         "Simulated: ", simulated$m2),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     abline(h = mcmc_specs$mod_start_points$m2, col = 'blue', lwd = 2) #True = green
   } else {
     plot.ts(m2_mcmc, ylab = paste0(mcmc_specs$mod_par_names[2], ",sigma"), #ylim=c(0, m2_lim),
             main = paste(mcmc_specs$mod_par_names[2], "MCMC",
-                         "Start: ", mcmc_specs$simulated$m2, ', Sigma (blue)'),
+                         "Start: ", simulated$m2, ', Sigma (blue)'),
             cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
     lines(mcmc_output$sigma$sigma2_vec, col = 'blue')
   }
@@ -423,10 +423,10 @@ PLOT_MCMC_ETA_GRID <- function(epidemic_data, mcmc_output, seed_count, eta_sim, 
     rep = seed_count,
     n_mcmc = n_mcmc,
     mcmc_vec_size = mcmc_vec_size,
-    alpha_sim = mcmc_specs$simulated$m1[[1]],
+    alpha_sim = simulated$m1[[1]],
     alpha_start = mcmc_specs$mod_start_points$m1[[1]],
     alpha_mean_mcmc = round(mean(m1_mcmc), 2), #round(mean(m1_mcmc[(mcmc_vec_size/2): mcmc_vec_size]), 2),
-    k_sim = mcmc_specs$simulated$m2[[1]], 
+    k_sim = simulated$m2[[1]], 
     k_start =  mcmc_specs$mod_start_points$m2[[1]],
     k_mean_mcmc = round(mean(m2_mcmc), 2),
     eta_sim = round(eta_sim_val, 2),
